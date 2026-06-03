@@ -1,0 +1,297 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1220" viewBox="0 0 1900 1220" role="img" aria-labelledby="title desc">
+  <title id="title">Detailed KeypointDominantFusionNet architecture</title>
+  <desc id="desc">Code-grounded CVPR-style block diagram for KeypointDominantFusionNet showing visible and infrared encoders, content cue extraction, three DominanceCrossAttention modules, decoder, prediction heads, luminance fusion, and auxiliary outputs.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#263238"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#1d5f99"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#a83d2a"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#167251"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#7048b7"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#111827" flood-opacity="0.13"/>
+    </filter>
+    <linearGradient id="g-vis" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#eef7ff"/>
+      <stop offset="100%" stop-color="#cfe7ff"/>
+    </linearGradient>
+    <linearGradient id="g-ir" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fff1ed"/>
+      <stop offset="100%" stop-color="#ffd6ca"/>
+    </linearGradient>
+    <linearGradient id="g-cue" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fffbe8"/>
+      <stop offset="100%" stop-color="#f8e7a0"/>
+    </linearGradient>
+    <linearGradient id="g-ca" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f6efff"/>
+      <stop offset="100%" stop-color="#dfccff"/>
+    </linearGradient>
+    <linearGradient id="g-dec" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e8eef7"/>
+    </linearGradient>
+    <linearGradient id="g-out" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#effdf4"/>
+      <stop offset="100%" stop-color="#c9f2d8"/>
+    </linearGradient>
+    <style>
+      .bg { fill: #ffffff; }
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 36px; font-weight: 700; fill: #101828; }
+      .subtitle { font-family: Arial, Helvetica, sans-serif; font-size: 18px; fill: #475467; }
+      .section { fill: none; stroke: #d0d5dd; stroke-width: 1.5; stroke-dasharray: 10 8; rx: 24; }
+      .section-title { font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: 700; fill: #344054; letter-spacing: 0.3px; }
+      .box-title { font-family: Arial, Helvetica, sans-serif; font-size: 17px; font-weight: 700; fill: #111827; }
+      .box-sub { font-family: Arial, Helvetica, sans-serif; font-size: 13.5px; fill: #344054; }
+      .small { font-family: Arial, Helvetica, sans-serif; font-size: 12px; fill: #475467; }
+      .tiny { font-family: Arial, Helvetica, sans-serif; font-size: 10.8px; fill: #667085; }
+      .vis { fill: url(#g-vis); stroke: #5aa1dd; stroke-width: 2; rx: 15; filter: url(#shadow); }
+      .ir { fill: url(#g-ir); stroke: #ef806d; stroke-width: 2; rx: 15; filter: url(#shadow); }
+      .cue { fill: url(#g-cue); stroke: #d7a900; stroke-width: 1.8; rx: 15; filter: url(#shadow); }
+      .ca { fill: url(#g-ca); stroke: #8e6adb; stroke-width: 2.1; rx: 16; filter: url(#shadow); }
+      .dec { fill: url(#g-dec); stroke: #98a2b3; stroke-width: 2; rx: 15; filter: url(#shadow); }
+      .out { fill: url(#g-out); stroke: #30a46c; stroke-width: 2; rx: 16; filter: url(#shadow); }
+      .math { fill: #fffdf7; stroke: #f2c94c; stroke-width: 1.6; rx: 14; filter: url(#shadow); }
+      .aux { fill: #f4f8ff; stroke: #8db7f0; stroke-width: 1.7; rx: 14; filter: url(#shadow); }
+      .line { fill: none; stroke: #263238; stroke-width: 2.6; marker-end: url(#arrow); }
+      .line-blue { fill: none; stroke: #1d5f99; stroke-width: 2.8; marker-end: url(#arrow-blue); }
+      .line-red { fill: none; stroke: #a83d2a; stroke-width: 2.8; marker-end: url(#arrow-red); }
+      .line-green { fill: none; stroke: #167251; stroke-width: 2.8; marker-end: url(#arrow-green); }
+      .line-purple { fill: none; stroke: #7048b7; stroke-width: 2.8; marker-end: url(#arrow-purple); }
+      .dash { stroke-dasharray: 8 7; }
+      .chip { fill: #ffffff; stroke: #d0d5dd; stroke-width: 1.1; rx: 8; }
+      .legend { font-family: Arial, Helvetica, sans-serif; font-size: 13px; fill: #344054; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1900" height="1220"/>
+  <text class="title" x="950" y="56" text-anchor="middle">KeypointDominantFusionNet: Detailed Architecture</text>
+  <text class="subtitle" x="950" y="88" text-anchor="middle">Code-grounded diagram for VIS-IR fusion with content cues, three-scale dominance cross-attention, and luminance/color reconstruction</text>
+
+  <rect class="section" x="55" y="128" width="260" height="825" rx="24"/>
+  <text class="section-title" x="185" y="160" text-anchor="middle">Inputs and cues</text>
+  <rect class="section" x="350" y="128" width="785" height="825" rx="24"/>
+  <text class="section-title" x="742" y="160" text-anchor="middle">Parallel VIS / IR encoders with DominanceCrossAttention</text>
+  <rect class="section" x="1175" y="128" width="355" height="825" rx="24"/>
+  <text class="section-title" x="1352" y="160" text-anchor="middle">Decoder and heads</text>
+  <rect class="section" x="1565" y="128" width="280" height="825" rx="24"/>
+  <text class="section-title" x="1705" y="160" text-anchor="middle">Fusion output</text>
+
+  <!-- Inputs -->
+  <rect class="vis" x="82" y="205" width="205" height="88" rx="15"/>
+  <text class="box-title" x="184" y="236" text-anchor="middle">Visible RGB</text>
+  <text class="box-sub" x="184" y="260" text-anchor="middle">v: B,3,H,W</text>
+  <text class="small" x="184" y="281" text-anchor="middle">range [0,1]</text>
+
+  <rect class="ir" x="82" y="370" width="205" height="88" rx="15"/>
+  <text class="box-title" x="184" y="401" text-anchor="middle">Infrared</text>
+  <text class="box-sub" x="184" y="425" text-anchor="middle">i: B,1,H,W</text>
+  <text class="small" x="184" y="446" text-anchor="middle">range [0,1]</text>
+
+  <rect class="cue" x="82" y="548" width="205" height="168" rx="15"/>
+  <text class="box-title" x="184" y="580" text-anchor="middle">Content cue</text>
+  <text class="box-sub" x="184" y="608" text-anchor="middle">bright = normalize(y)</text>
+  <text class="box-sub" x="184" y="631" text-anchor="middle">edge = normalize(|grad y|)</text>
+  <text class="box-sub" x="184" y="654" text-anchor="middle">contrast = local std</text>
+  <text class="small" x="184" y="681" text-anchor="middle">cue = 0.35 bright</text>
+  <text class="small" x="184" y="701" text-anchor="middle">+ 0.45 edge + 0.20 contrast</text>
+
+  <rect class="cue" x="82" y="760" width="205" height="96" rx="15"/>
+  <text class="box-title" x="184" y="792" text-anchor="middle">Cue smoothing</text>
+  <text class="box-sub" x="184" y="818" text-anchor="middle">normalize_map</text>
+  <text class="box-sub" x="184" y="841" text-anchor="middle">GaussianBlur 5x5</text>
+
+  <!-- Encoder scale 1 -->
+  <rect class="vis" x="385" y="205" width="196" height="92" rx="15"/>
+  <text class="box-title" x="483" y="235" text-anchor="middle">VIS v1</text>
+  <text class="box-sub" x="483" y="260" text-anchor="middle">ConvBNAct(3,b)</text>
+  <text class="small" x="483" y="281" text-anchor="middle">ConvBNAct(b,b), H x W</text>
+
+  <rect class="ir" x="385" y="370" width="196" height="92" rx="15"/>
+  <text class="box-title" x="483" y="400" text-anchor="middle">IR i1</text>
+  <text class="box-sub" x="483" y="425" text-anchor="middle">ConvBNAct(1,b)</text>
+  <text class="small" x="483" y="446" text-anchor="middle">ConvBNAct(b,b), H x W</text>
+
+  <rect class="ca" x="646" y="273" width="248" height="128" rx="16"/>
+  <text class="box-title" x="770" y="303" text-anchor="middle">ca1: DominanceCrossAttention</text>
+  <text class="box-sub" x="770" y="330" text-anchor="middle">cat[v1,i1,c1v,c1i] -> logits</text>
+  <text class="box-sub" x="770" y="353" text-anchor="middle">softmax: w_self,w_cross,w_shared</text>
+  <text class="small" x="770" y="379" text-anchor="middle">1x1 projections + residual cross update</text>
+
+  <rect class="chip" x="696" y="405" width="148" height="27" rx="8"/>
+  <text class="tiny" x="770" y="423" text-anchor="middle">outputs: v1, i1, w1</text>
+
+  <!-- Encoder scale 2 -->
+  <rect class="vis" x="385" y="515" width="196" height="96" rx="15"/>
+  <text class="box-title" x="483" y="545" text-anchor="middle">VIS v2</text>
+  <text class="box-sub" x="483" y="570" text-anchor="middle">ConvBNAct(b,2b,s=2)</text>
+  <text class="small" x="483" y="592" text-anchor="middle">ConvBNAct(2b,2b), H/2</text>
+
+  <rect class="ir" x="385" y="682" width="196" height="96" rx="15"/>
+  <text class="box-title" x="483" y="712" text-anchor="middle">IR i2</text>
+  <text class="box-sub" x="483" y="737" text-anchor="middle">ConvBNAct(b,2b,s=2)</text>
+  <text class="small" x="483" y="759" text-anchor="middle">ConvBNAct(2b,2b), H/2</text>
+
+  <rect class="ca" x="646" y="586" width="248" height="128" rx="16"/>
+  <text class="box-title" x="770" y="616" text-anchor="middle">ca2: DominanceCrossAttention</text>
+  <text class="box-sub" x="770" y="643" text-anchor="middle">cue_v, cue_i resized to H/2</text>
+  <text class="box-sub" x="770" y="666" text-anchor="middle">cross-update VIS and IR features</text>
+  <text class="small" x="770" y="692" text-anchor="middle">channel width: 2b</text>
+
+  <rect class="chip" x="696" y="718" width="148" height="27" rx="8"/>
+  <text class="tiny" x="770" y="736" text-anchor="middle">outputs: v2, i2, w2</text>
+
+  <!-- Encoder scale 3 -->
+  <rect class="vis" x="925" y="205" width="180" height="96" rx="15"/>
+  <text class="box-title" x="1015" y="235" text-anchor="middle">VIS v3</text>
+  <text class="box-sub" x="1015" y="260" text-anchor="middle">ConvBNAct(2b,4b,s=2)</text>
+  <text class="small" x="1015" y="282" text-anchor="middle">ConvBNAct(4b,4b), H/4</text>
+
+  <rect class="ir" x="925" y="370" width="180" height="96" rx="15"/>
+  <text class="box-title" x="1015" y="400" text-anchor="middle">IR i3</text>
+  <text class="box-sub" x="1015" y="425" text-anchor="middle">ConvBNAct(2b,4b,s=2)</text>
+  <text class="small" x="1015" y="447" text-anchor="middle">ConvBNAct(4b,4b), H/4</text>
+
+  <rect class="ca" x="925" y="544" width="180" height="148" rx="16"/>
+  <text class="box-title" x="1015" y="574" text-anchor="middle">ca3</text>
+  <text class="box-sub" x="1015" y="601" text-anchor="middle">Dominance</text>
+  <text class="box-sub" x="1015" y="624" text-anchor="middle">CrossAttention</text>
+  <text class="small" x="1015" y="650" text-anchor="middle">cue resized to H/4</text>
+  <text class="small" x="1015" y="670" text-anchor="middle">outputs: v3, i3, w3</text>
+
+  <!-- DCA detail inset -->
+  <rect class="math" x="648" y="808" width="455" height="112" rx="14"/>
+  <text class="box-title" x="876" y="838" text-anchor="middle">Inside each DominanceCrossAttention(ch)</text>
+  <text class="box-sub" x="876" y="865" text-anchor="middle">logits = Conv1x1(cat[vf, irf, cue_v, cue_i])</text>
+  <text class="box-sub" x="876" y="888" text-anchor="middle">w = softmax(logits) = [w_self, w_cross, w_shared]</text>
+  <text class="small" x="876" y="911" text-anchor="middle">vf += sigmoid(alpha_vis) * (w_cross*p_i + w_shared*0.5*(p_i+p_v)); IR mirrors VIS</text>
+
+  <!-- Decoder and heads -->
+  <rect class="dec" x="1210" y="205" width="285" height="112" rx="15"/>
+  <text class="box-title" x="1352" y="237" text-anchor="middle">fuse_top</text>
+  <text class="box-sub" x="1352" y="263" text-anchor="middle">cat[v3,i3] -> 8b channels</text>
+  <text class="box-sub" x="1352" y="286" text-anchor="middle">ConvBNAct(8b,4b) + ConvBNAct(4b,4b)</text>
+
+  <rect class="dec" x="1210" y="380" width="285" height="120" rx="15"/>
+  <text class="box-title" x="1352" y="412" text-anchor="middle">up2 + dec2</text>
+  <text class="box-sub" x="1352" y="438" text-anchor="middle">bilinear x2 + ConvBNAct(4b,2b)</text>
+  <text class="box-sub" x="1352" y="461" text-anchor="middle">cat[d2,v2,i2] -> 6b</text>
+  <text class="small" x="1352" y="483" text-anchor="middle">ConvBNAct(6b,2b) + ConvBNAct(2b,2b)</text>
+
+  <rect class="dec" x="1210" y="570" width="285" height="120" rx="15"/>
+  <text class="box-title" x="1352" y="602" text-anchor="middle">up1 + dec1</text>
+  <text class="box-sub" x="1352" y="628" text-anchor="middle">bilinear x2 + ConvBNAct(2b,b)</text>
+  <text class="box-sub" x="1352" y="651" text-anchor="middle">cat[d1,v1,i1] -> 3b</text>
+  <text class="small" x="1352" y="673" text-anchor="middle">ConvBNAct(3b,b) + ConvBNAct(b,b)</text>
+
+  <rect class="dec" x="1210" y="760" width="132" height="95" rx="15"/>
+  <text class="box-title" x="1276" y="792" text-anchor="middle">out_rgb</text>
+  <text class="box-sub" x="1276" y="818" text-anchor="middle">Conv1x1</text>
+  <text class="small" x="1276" y="839" text-anchor="middle">sigmoid -> pred_rgb</text>
+
+  <rect class="dec" x="1363" y="760" width="132" height="95" rx="15"/>
+  <text class="box-title" x="1429" y="792" text-anchor="middle">out_ir_w</text>
+  <text class="box-sub" x="1429" y="818" text-anchor="middle">Conv1x1</text>
+  <text class="small" x="1429" y="839" text-anchor="middle">ir_w_logits</text>
+
+  <!-- Output math -->
+  <rect class="math" x="1594" y="190" width="222" height="112" rx="14"/>
+  <text class="box-title" x="1705" y="222" text-anchor="middle">Dominance weight</text>
+  <text class="box-sub" x="1705" y="248" text-anchor="middle">dom = 0.5*(cue_i - cue_v)</text>
+  <text class="small" x="1705" y="270" text-anchor="middle">ir_w = sigmoid(logits + 1.5*dom)</text>
+  <text class="small" x="1705" y="290" text-anchor="middle">clamp 0.02..0.98 + smooth</text>
+
+  <rect class="math" x="1594" y="352" width="222" height="134" rx="14"/>
+  <text class="box-title" x="1705" y="384" text-anchor="middle">Luminance fusion</text>
+  <text class="box-sub" x="1705" y="410" text-anchor="middle">vis_y = luma(v)</text>
+  <text class="box-sub" x="1705" y="433" text-anchor="middle">pred_y = luma(pred_rgb)</text>
+  <text class="small" x="1705" y="456" text-anchor="middle">target_y = (1-ir_w)*vis_y + ir_w*i</text>
+  <text class="small" x="1705" y="476" text-anchor="middle">fused_y = (1-mix)*target_y + mix*pred_y</text>
+
+  <rect class="math" x="1594" y="540" width="222" height="126" rx="14"/>
+  <text class="box-title" x="1705" y="572" text-anchor="middle">Color recovery</text>
+  <text class="box-sub" x="1705" y="598" text-anchor="middle">ratio = fused_y/(vis_y+eps)</text>
+  <text class="box-sub" x="1705" y="621" text-anchor="middle">clamp ratio 0.55..1.55</text>
+  <text class="small" x="1705" y="644" text-anchor="middle">vis_color = clamp(v * ratio)</text>
+
+  <rect class="out" x="1594" y="728" width="222" height="112" rx="16"/>
+  <text class="box-title" x="1705" y="764" text-anchor="middle">Fused RGB output</text>
+  <text class="box-sub" x="1705" y="792" text-anchor="middle">fused = (1-mix)*vis_color</text>
+  <text class="box-sub" x="1705" y="815" text-anchor="middle">+ mix*pred_rgb</text>
+
+  <rect class="aux" x="1594" y="878" width="222" height="70" rx="14"/>
+  <text class="box-title" x="1705" y="906" text-anchor="middle">Auxiliary outputs</text>
+  <text class="small" x="1705" y="930" text-anchor="middle">pred_rgb, ir_w, target_y, [w1,w2,w3]</text>
+
+  <!-- Main arrows -->
+  <path class="line-blue" d="M287 249 C325 249, 346 249, 382 249"/>
+  <path class="line-red" d="M287 414 C325 414, 346 416, 382 416"/>
+  <path class="line-blue" d="M581 251 C612 260, 626 285, 643 315"/>
+  <path class="line-red" d="M581 416 C612 406, 626 384, 643 359"/>
+  <path class="line-blue" d="M894 315 C905 291, 912 276, 922 259"/>
+  <path class="line-red" d="M894 359 C905 379, 912 394, 922 418"/>
+  <path class="line-blue" d="M483 297 C483 368, 483 461, 483 512"/>
+  <path class="line-red" d="M483 462 C483 535, 483 627, 483 679"/>
+  <path class="line-blue" d="M581 563 C612 573, 626 600, 643 630"/>
+  <path class="line-red" d="M581 730 C612 720, 626 695, 643 670"/>
+  <path class="line-blue" d="M894 630 C910 582, 930 514, 972 469"/>
+  <path class="line-red" d="M894 670 C914 650, 930 640, 922 620"/>
+  <path class="line-blue" d="M1015 301 C1015 335, 1015 348, 1015 367"/>
+  <path class="line-purple" d="M1105 254 C1146 254, 1170 254, 1206 254"/>
+  <path class="line-purple" d="M1105 418 C1150 385, 1175 333, 1210 289"/>
+  <path class="line-purple" d="M1352 317 C1352 344, 1352 354, 1352 376"/>
+  <path class="line-purple" d="M894 650 C1030 650, 1090 440, 1206 440"/>
+  <path class="line-purple" d="M1352 500 C1352 532, 1352 546, 1352 566"/>
+  <path class="line-purple" d="M894 337 C1020 337, 1100 630, 1206 630"/>
+  <path class="line-purple" d="M1352 690 C1352 720, 1315 739, 1288 758"/>
+  <path class="line-purple" d="M1352 690 C1395 718, 1423 737, 1428 757"/>
+
+  <!-- Cue arrows -->
+  <path class="line" d="M184 293 C184 380, 184 478, 184 545"/>
+  <path class="line" d="M184 458 C184 492, 184 518, 184 545"/>
+  <path class="line" d="M184 716 C184 733, 184 742, 184 757"/>
+  <path class="line" d="M287 808 C430 808, 555 364, 643 337"/>
+  <path class="line dash" d="M287 808 C430 808, 555 650, 643 650"/>
+  <path class="line dash" d="M287 808 C625 935, 845 745, 922 628"/>
+  <text class="tiny" x="378" y="779">cue_v/cue_i interpolated to each scale</text>
+
+  <!-- Head/output arrows -->
+  <path class="line-green" d="M1342 808 C1415 808, 1515 760, 1590 774"/>
+  <path class="line-green" d="M1495 808 C1542 808, 1575 296, 1590 259"/>
+  <path class="line-green" d="M1816 246 C1840 286, 1840 355, 1819 415"/>
+  <path class="line-green" d="M1816 419 C1842 462, 1840 536, 1819 603"/>
+  <path class="line-green" d="M1816 603 C1841 650, 1838 722, 1819 779"/>
+  <path class="line-green" d="M1705 840 C1705 855, 1705 862, 1705 875"/>
+
+  <!-- Skip labels -->
+  <text class="tiny" x="1115" y="395">skip: v2,i2 into dec2</text>
+  <text class="tiny" x="1115" y="615">skip: v1,i1 into dec1</text>
+
+  <!-- Legend -->
+  <rect x="72" y="998" width="1760" height="158" rx="20" fill="#f8fafc" stroke="#e4e7ec" stroke-width="1.3"/>
+  <text class="section-title" x="100" y="1030">Implementation notes from code</text>
+  <text class="legend" x="100" y="1060">Base width: b=32 by default. ConvBNAct = Conv2d + BatchNorm2d + GELU. Encoders are parallel and updated after each scale by DominanceCrossAttention.</text>
+  <text class="legend" x="100" y="1085">The dominance cue is hand-crafted from brightness, gradient magnitude, and local contrast, then Gaussian-smoothed before being resized for ca1, ca2, and ca3.</text>
+  <text class="legend" x="100" y="1110">The final output mixes a learned RGB prediction with a luminance-preserving VIS color reconstruction controlled by learned scalar pred_mix and spatial IR weight ir_w.</text>
+  <rect class="chip" x="103" y="1128" width="19" height="14" rx="5" fill="#cfe7ff"/>
+  <text class="legend" x="132" y="1140">VIS path</text>
+  <rect class="chip" x="223" y="1128" width="19" height="14" rx="5" fill="#ffd6ca"/>
+  <text class="legend" x="252" y="1140">IR path</text>
+  <rect class="chip" x="342" y="1128" width="19" height="14" rx="5" fill="#f8e7a0"/>
+  <text class="legend" x="371" y="1140">content cues</text>
+  <rect class="chip" x="502" y="1128" width="19" height="14" rx="5" fill="#dfccff"/>
+  <text class="legend" x="531" y="1140">cross-attention</text>
+  <rect class="chip" x="690" y="1128" width="19" height="14" rx="5" fill="#e8eef7"/>
+  <text class="legend" x="719" y="1140">decoder/head</text>
+  <rect class="chip" x="875" y="1128" width="19" height="14" rx="5" fill="#c9f2d8"/>
+  <text class="legend" x="904" y="1140">fused output</text>
+</svg>
