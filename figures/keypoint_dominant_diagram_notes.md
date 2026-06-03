@@ -39,3 +39,20 @@ straight-line SVG/PDF pairs were added as the preferred paper-ready versions:
   - compact loss/evaluation/backpropagation figure,
   - includes the requested fire icon on the trainable fusion network block,
   - includes the requested snowflake icon on the frozen KeyNet block.
+
+## Download guidance for full visibility
+
+If module box outlines disappear after download, the viewer/importer is likely ignoring
+embedded SVG CSS. Use one of these options:
+
+1. For CVPR/LaTeX submission, use the exported PDF files. They preserve fills, strokes,
+   arrowheads, and text in a single-page vector format.
+2. If SVG is required, download from GitHub using **Raw** or **Download raw file** rather
+   than right-clicking the rendered preview.
+3. For PowerPoint, Word, Google Docs, or other tools that sometimes strip CSS, use the
+   portable inline-styled SVG copies:
+   - `keypoint_dominant_network_cvpr_portable.svg`
+   - `keypoint_dominant_loss_backprop_cvpr_portable.svg`
+
+The `*_cvpr_clean.svg` files remain editable source SVGs, while the `*_cvpr_portable.svg`
+files are optimized for robust download/import visibility.
