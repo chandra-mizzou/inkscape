@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">KPFuse v4 Dominant High-GPU Network block diagram</title>
+  <desc id="desc">Publication-style block diagram for a KPFuse v4 fusion network with dual modality inputs, high-GPU dominant encoder branch, keypoint-preserving branch, gated cross-fusion core, decoder, and optional multi-GPU training path.</desc>
+  <defs>
+    <marker id="arrow-dark" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#263238"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#b84d13"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#0f6f78"/>
+    </marker>
+    <marker id="arrow-dashed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#667085"/>
+    </marker>
+    <linearGradient id="grad-input" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#eef7ff"/>
+      <stop offset="100%" stop-color="#d8ecff"/>
+    </linearGradient>
+    <linearGradient id="grad-dom" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fff4eb"/>
+      <stop offset="100%" stop-color="#ffd7bd"/>
+    </linearGradient>
+    <linearGradient id="grad-kp" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e9fbfb"/>
+      <stop offset="100%" stop-color="#c4eeee"/>
+    </linearGradient>
+    <linearGradient id="grad-fuse" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f7f0ff"/>
+      <stop offset="100%" stop-color="#e5d6ff"/>
+    </linearGradient>
+    <linearGradient id="grad-output" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ecfdf3"/>
+      <stop offset="100%" stop-color="#c9f2d8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.14"/>
+    </filter>
+    <style>
+      .bg { fill: #ffffff; }
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 34px; font-weight: 700; fill: #111827; }
+      .subtitle { font-family: Arial, Helvetica, sans-serif; font-size: 18px; fill: #475467; }
+      .section-title { font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 0.4px; fill: #344054; }
+      .box-title { font-family: Arial, Helvetica, sans-serif; font-size: 17px; font-weight: 700; fill: #111827; }
+      .box-text { font-family: Arial, Helvetica, sans-serif; font-size: 14px; fill: #344054; }
+      .small { font-family: Arial, Helvetica, sans-serif; font-size: 12.5px; fill: #475467; }
+      .tiny { font-family: Arial, Helvetica, sans-serif; font-size: 11.5px; fill: #667085; }
+      .input-box { fill: url(#grad-input); stroke: #7cb7e8; stroke-width: 2; rx: 18; filter: url(#shadow); }
+      .stem-box { fill: #f4f8ff; stroke: #8db7f0; stroke-width: 2; rx: 16; filter: url(#shadow); }
+      .dom-box { fill: url(#grad-dom); stroke: #f59e62; stroke-width: 2.2; rx: 16; filter: url(#shadow); }
+      .kp-box { fill: url(#grad-kp); stroke: #31a9b1; stroke-width: 2.2; rx: 16; filter: url(#shadow); }
+      .fusion-box { fill: url(#grad-fuse); stroke: #9b7ae6; stroke-width: 2.3; rx: 18; filter: url(#shadow); }
+      .decode-box { fill: #f5f7fb; stroke: #98a2b3; stroke-width: 2; rx: 16; filter: url(#shadow); }
+      .output-box { fill: url(#grad-output); stroke: #32a967; stroke-width: 2.2; rx: 18; filter: url(#shadow); }
+      .note-box { fill: #fffdf5; stroke: #f4c430; stroke-width: 1.7; rx: 14; }
+      .gpu-box { fill: #f8fafc; stroke: #7c8aa5; stroke-width: 1.6; rx: 13; }
+      .line { fill: none; stroke: #263238; stroke-width: 2.6; marker-end: url(#arrow-dark); }
+      .line-orange { fill: none; stroke: #b84d13; stroke-width: 3; marker-end: url(#arrow-orange); }
+      .line-teal { fill: none; stroke: #0f6f78; stroke-width: 3; marker-end: url(#arrow-teal); }
+      .line-light { fill: none; stroke: #667085; stroke-width: 2; marker-end: url(#arrow-dashed); }
+      .dash { stroke-dasharray: 8 7; }
+      .skip { fill: none; stroke: #667085; stroke-width: 2; stroke-dasharray: 7 6; marker-end: url(#arrow-dashed); }
+      .outline { fill: none; stroke: #d0d5dd; stroke-width: 1.5; stroke-dasharray: 9 7; rx: 22; }
+      .chip { fill: #ffffff; stroke: #d0d5dd; stroke-width: 1.2; rx: 10; }
+      .legend-text { font-family: Arial, Helvetica, sans-serif; font-size: 13px; fill: #344054; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="980"/>
+
+  <text class="title" x="800" y="56" text-anchor="middle">KPFuse v4 Dominant High-GPU Network</text>
+  <text class="subtitle" x="800" y="86" text-anchor="middle">CVPR-ready block diagram draft: dual-modality feature extraction, dominant high-capacity branch, keypoint-guided fusion, and decoder</text>
+
+  <!-- Section frames -->
+  <rect class="outline" x="55" y="125" width="260" height="395" rx="24"/>
+  <text class="section-title" x="185" y="155" text-anchor="middle">Inputs</text>
+
+  <rect class="outline" x="350" y="125" width="305" height="395" rx="24"/>
+  <text class="section-title" x="502" y="155" text-anchor="middle">Tokenization / Stems</text>
+
+  <rect class="outline" x="690" y="125" width="400" height="580" rx="24"/>
+  <text class="section-title" x="890" y="155" text-anchor="middle">KPFuse v4 Encoder</text>
+
+  <rect class="outline" x="1125" y="125" width="245" height="580" rx="24"/>
+  <text class="section-title" x="1248" y="155" text-anchor="middle">Fusion Core</text>
+
+  <rect class="outline" x="1400" y="125" width="150" height="580" rx="24"/>
+  <text class="section-title" x="1475" y="155" text-anchor="middle">Output</text>
+
+  <!-- Inputs -->
+  <rect class="input-box" x="95" y="195" width="180" height="110" rx="18"/>
+  <text class="box-title" x="185" y="230" text-anchor="middle">Modality A</text>
+  <text class="box-text" x="185" y="255" text-anchor="middle">Visible / RGB</text>
+  <text class="small" x="185" y="280" text-anchor="middle">I_a in R^(H x W x C)</text>
+
+  <rect class="input-box" x="95" y="350" width="180" height="110" rx="18"/>
+  <text class="box-title" x="185" y="385" text-anchor="middle">Modality B</text>
+  <text class="box-text" x="185" y="410" text-anchor="middle">IR / depth / aux.</text>
+  <text class="small" x="185" y="435" text-anchor="middle">I_b in R^(H x W x C)</text>
+
+  <!-- Stems -->
+  <rect class="stem-box" x="385" y="188" width="235" height="122" rx="16"/>
+  <text class="box-title" x="502" y="222" text-anchor="middle">Modality Stem A</text>
+  <text class="box-text" x="502" y="248" text-anchor="middle">Conv3x3 + norm + GELU</text>
+  <text class="small" x="502" y="273" text-anchor="middle">patch / token embedding</text>
+
+  <rect class="stem-box" x="385" y="345" width="235" height="122" rx="16"/>
+  <text class="box-title" x="502" y="379" text-anchor="middle">Modality Stem B</text>
+  <text class="box-text" x="502" y="405" text-anchor="middle">Conv3x3 + norm + GELU</text>
+  <text class="small" x="502" y="430" text-anchor="middle">shared channel width C_v4</text>
+
+  <rect class="stem-box" x="408" y="535" width="188" height="78" rx="16"/>
+  <text class="box-title" x="502" y="565" text-anchor="middle">Feature Pair</text>
+  <text class="small" x="502" y="590" text-anchor="middle">F_a^0, F_b^0</text>
+
+  <!-- Encoder dominant branch -->
+  <rect class="dom-box" x="730" y="190" width="320" height="120" rx="16"/>
+  <text class="box-title" x="890" y="222" text-anchor="middle">Dominant High-GPU Branch</text>
+  <text class="box-text" x="890" y="248" text-anchor="middle">DHB x N: large receptive-field conv</text>
+  <text class="box-text" x="890" y="271" text-anchor="middle">window attention + FFN mixing</text>
+  <text class="small" x="890" y="294" text-anchor="middle">high-capacity path for salient/global cues</text>
+
+  <rect class="kp-box" x="730" y="360" width="320" height="120" rx="16"/>
+  <text class="box-title" x="890" y="392" text-anchor="middle">KP-Preserving Branch</text>
+  <text class="box-text" x="890" y="418" text-anchor="middle">keypoint / edge heatmap encoder</text>
+  <text class="box-text" x="890" y="441" text-anchor="middle">local texture + structure tokens</text>
+  <text class="small" x="890" y="464" text-anchor="middle">protects boundaries and fine detail</text>
+
+  <rect class="decode-box" x="730" y="540" width="320" height="118" rx="16"/>
+  <text class="box-title" x="890" y="572" text-anchor="middle">Multi-Scale Aggregator</text>
+  <text class="box-text" x="890" y="598" text-anchor="middle">pyramid features: {1/2, 1/4, 1/8}</text>
+  <text class="box-text" x="890" y="621" text-anchor="middle">skip preparation + channel alignment</text>
+  <text class="small" x="890" y="644" text-anchor="middle">F_dom^l and F_kp^l</text>
+
+  <!-- Fusion core -->
+  <rect class="fusion-box" x="1158" y="205" width="180" height="140" rx="18"/>
+  <text class="box-title" x="1248" y="238" text-anchor="middle">Dominance Gate</text>
+  <text class="box-text" x="1248" y="265" text-anchor="middle">sigmoid / softmax</text>
+  <text class="box-text" x="1248" y="288" text-anchor="middle">W_dom, W_kp</text>
+  <text class="small" x="1248" y="316" text-anchor="middle">adaptive modality weights</text>
+
+  <rect class="fusion-box" x="1158" y="400" width="180" height="148" rx="18"/>
+  <text class="box-title" x="1248" y="432" text-anchor="middle">KP-Guided</text>
+  <text class="box-title" x="1248" y="455" text-anchor="middle">Cross Fusion</text>
+  <text class="box-text" x="1248" y="483" text-anchor="middle">cross-attention</text>
+  <text class="box-text" x="1248" y="506" text-anchor="middle">concat + 1x1 mix</text>
+  <text class="small" x="1248" y="532" text-anchor="middle">F_fuse^l</text>
+
+  <rect class="decode-box" x="1158" y="604" width="180" height="82" rx="16"/>
+  <text class="box-title" x="1248" y="636" text-anchor="middle">FPN Decoder</text>
+  <text class="small" x="1248" y="661" text-anchor="middle">upsample + residual refine</text>
+
+  <!-- Output -->
+  <rect class="output-box" x="1422" y="312" width="106" height="118" rx="18"/>
+  <text class="box-title" x="1475" y="347" text-anchor="middle">Fused</text>
+  <text class="box-title" x="1475" y="370" text-anchor="middle">Image</text>
+  <text class="box-text" x="1475" y="397" text-anchor="middle">Y_f</text>
+
+  <rect class="output-box" x="1422" y="505" width="106" height="98" rx="18"/>
+  <text class="box-title" x="1475" y="540" text-anchor="middle">Task</text>
+  <text class="box-title" x="1475" y="563" text-anchor="middle">Head</text>
+  <text class="small" x="1475" y="585" text-anchor="middle">optional</text>
+
+  <!-- Data-flow arrows -->
+  <path class="line" d="M275 250 C315 250, 335 249, 382 249"/>
+  <path class="line" d="M275 405 C315 405, 335 406, 382 406"/>
+  <path class="line" d="M502 310 C502 340, 502 340, 502 343"/>
+  <path class="line" d="M502 467 C502 496, 502 510, 502 532"/>
+  <path class="line" d="M596 574 C640 574, 665 574, 724 574"/>
+
+  <path class="line-orange" d="M620 249 C665 249, 690 249, 727 249"/>
+  <path class="line-teal" d="M620 406 C665 406, 690 420, 727 420"/>
+  <path class="line-orange" d="M890 310 C890 335, 890 338, 890 357"/>
+  <path class="line-teal" d="M890 480 C890 505, 890 516, 890 537"/>
+
+  <path class="line-orange" d="M1050 250 C1100 250, 1125 260, 1154 275"/>
+  <path class="line-teal" d="M1050 420 C1102 420, 1125 420, 1154 420"/>
+  <path class="line" d="M1050 599 C1102 599, 1125 560, 1154 516"/>
+  <path class="line" d="M1248 345 C1248 368, 1248 375, 1248 396"/>
+  <path class="line" d="M1248 548 C1248 574, 1248 584, 1248 600"/>
+  <path class="line" d="M1338 645 C1383 645, 1395 565, 1419 554"/>
+  <path class="line" d="M1338 645 C1390 645, 1398 398, 1419 371"/>
+  <path class="line-light dash" d="M1475 505 C1475 468, 1475 460, 1475 432"/>
+
+  <!-- Skip connections -->
+  <path class="skip" d="M620 214 C820 115, 1130 120, 1225 201"/>
+  <path class="skip" d="M620 442 C805 746, 1110 740, 1228 687"/>
+  <text class="tiny" x="930" y="126" text-anchor="middle">early high-resolution skip</text>
+  <text class="tiny" x="920" y="742" text-anchor="middle">texture/detail skip</text>
+
+  <!-- Internal chips in branch boxes -->
+  <rect class="chip" x="755" y="271" width="74" height="25" rx="9"/>
+  <text class="tiny" x="792" y="288" text-anchor="middle">Conv</text>
+  <rect class="chip" x="838" y="271" width="92" height="25" rx="9"/>
+  <text class="tiny" x="884" y="288" text-anchor="middle">Attention</text>
+  <rect class="chip" x="939" y="271" width="80" height="25" rx="9"/>
+  <text class="tiny" x="979" y="288" text-anchor="middle">FFN</text>
+
+  <rect class="chip" x="755" y="441" width="84" height="25" rx="9"/>
+  <text class="tiny" x="797" y="458" text-anchor="middle">KP heat</text>
+  <rect class="chip" x="848" y="441" width="78" height="25" rx="9"/>
+  <text class="tiny" x="887" y="458" text-anchor="middle">Edges</text>
+  <rect class="chip" x="935" y="441" width="84" height="25" rx="9"/>
+  <text class="tiny" x="977" y="458" text-anchor="middle">Texture</text>
+
+  <!-- Training / high-GPU deployment bar -->
+  <rect class="outline" x="55" y="748" width="1495" height="150" rx="24"/>
+  <text class="section-title" x="132" y="780">High-GPU Training / Deployment Context</text>
+
+  <rect class="gpu-box" x="95" y="810" width="205" height="58" rx="13"/>
+  <text class="box-title" x="198" y="835" text-anchor="middle">Mini-batches</text>
+  <text class="small" x="198" y="856" text-anchor="middle">paired crops + aug.</text>
+
+  <rect class="gpu-box" x="370" y="810" width="210" height="58" rx="13"/>
+  <text class="box-title" x="475" y="835" text-anchor="middle">DDP Replicas</text>
+  <text class="small" x="475" y="856" text-anchor="middle">GPU 0 ... GPU N</text>
+
+  <rect class="gpu-box" x="650" y="810" width="250" height="58" rx="13"/>
+  <text class="box-title" x="775" y="835" text-anchor="middle">AMP + Checkpointing</text>
+  <text class="small" x="775" y="856" text-anchor="middle">memory-efficient high-res path</text>
+
+  <rect class="gpu-box" x="970" y="810" width="230" height="58" rx="13"/>
+  <text class="box-title" x="1085" y="835" text-anchor="middle">All-reduce</text>
+  <text class="small" x="1085" y="856" text-anchor="middle">synchronized gradients</text>
+
+  <rect class="gpu-box" x="1270" y="810" width="220" height="58" rx="13"/>
+  <text class="box-title" x="1380" y="835" text-anchor="middle">Checkpoint</text>
+  <text class="small" x="1380" y="856" text-anchor="middle">KPFuse_v4 weights</text>
+
+  <path class="line-light" d="M300 839 C325 839, 342 839, 366 839"/>
+  <path class="line-light" d="M580 839 C605 839, 622 839, 646 839"/>
+  <path class="line-light" d="M900 839 C925 839, 942 839, 966 839"/>
+  <path class="line-light" d="M1200 839 C1225 839, 1242 839, 1266 839"/>
+
+  <!-- Loss callout -->
+  <rect class="note-box" x="1128" y="710" width="385" height="55" rx="14"/>
+  <text class="box-title" x="1320" y="733" text-anchor="middle">Publication annotation</text>
+  <text class="small" x="1320" y="754" text-anchor="middle">Training losses: intensity + gradient + structure/task consistency</text>
+  <path class="line-light dash" d="M1320 710 C1375 660, 1425 620, 1468 605"/>
+
+  <!-- Legend -->
+  <rect x="77" y="915" width="1445" height="42" rx="15" fill="#f8fafc" stroke="#e4e7ec" stroke-width="1.3"/>
+  <rect x="102" y="929" width="20" height="14" rx="4" fill="#ffd7bd" stroke="#f59e62"/>
+  <text class="legend-text" x="132" y="941">dominant high-capacity path</text>
+  <rect x="342" y="929" width="20" height="14" rx="4" fill="#c4eeee" stroke="#31a9b1"/>
+  <text class="legend-text" x="372" y="941">keypoint/detail path</text>
+  <rect x="552" y="929" width="20" height="14" rx="4" fill="#e5d6ff" stroke="#9b7ae6"/>
+  <text class="legend-text" x="582" y="941">adaptive fusion</text>
+  <line x1="747" y1="936" x2="802" y2="936" stroke="#263238" stroke-width="2.6" marker-end="url(#arrow-dark)"/>
+  <text class="legend-text" x="812" y="941">main inference flow</text>
+  <line x1="982" y1="936" x2="1037" y2="936" stroke="#667085" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow-dashed)"/>
+  <text class="legend-text" x="1047" y="941">skip / optional training signal</text>
+  <text class="tiny" x="1488" y="941" text-anchor="end">Editable SVG; update labels to match exact source implementation if available.</text>
+</svg>

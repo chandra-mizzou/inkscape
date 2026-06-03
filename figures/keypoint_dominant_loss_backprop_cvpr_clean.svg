@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1080" viewBox="0 0 1900 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Clean CVPR diagram of keypoint-centric loss and backpropagation</title>
+  <desc id="desc">Straight-line training diagram with trainable fusion network, frozen KeyNet, keypoint-centric losses, validation metrics, and optimizer update.</desc>
+  <defs>
+    <marker id="arr" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 Z" fill="#263238"/></marker>
+    <marker id="arrg" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 Z" fill="#16844d"/></marker>
+    <marker id="arrr" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 Z" fill="#c92a2a"/></marker>
+    <marker id="arrb" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 Z" fill="#1f6fb2"/></marker>
+    <marker id="arrp" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 Z" fill="#7453c8"/></marker>
+    <marker id="arrs" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 Z" fill="#667085"/></marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#111827" flood-opacity="0.12"/></filter>
+    <style>
+      .bg{fill:#fff}.title{font:700 34px Arial,Helvetica,sans-serif;fill:#101828}.sub{font:18px Arial,Helvetica,sans-serif;fill:#475467}.sec{fill:none;stroke:#d0d5dd;stroke-width:1.4;stroke-dasharray:9 7;rx:22}.sect{font:700 17px Arial,Helvetica,sans-serif;fill:#344054;letter-spacing:.3px}.bt{font:700 15.5px Arial,Helvetica,sans-serif;fill:#101828}.txt{font:12.8px Arial,Helvetica,sans-serif;fill:#344054}.sm{font:11.4px Arial,Helvetica,sans-serif;fill:#667085}.input{fill:#f8fafc;stroke:#98a2b3;stroke-width:1.8;rx:14;filter:url(#shadow)}.train{fill:#fff2e8;stroke:#ee7c20;stroke-width:2.3;rx:16;filter:url(#shadow)}.frozen{fill:#eaf7ff;stroke:#2897d3;stroke-width:2.3;rx:16;filter:url(#shadow)}.loss{fill:#f3ecff;stroke:#8d6bd8;stroke-width:2;rx:14;filter:url(#shadow)}.metric{fill:#ecfdf3;stroke:#2fa463;stroke-width:2;rx:14;filter:url(#shadow)}.math{fill:#fffdf7;stroke:#f0c541;stroke-width:1.6;rx:14;filter:url(#shadow)}.opt{fill:#f4f8ff;stroke:#8db7f0;stroke-width:1.8;rx:14;filter:url(#shadow)}.line{fill:none;stroke:#263238;stroke-width:2.4;marker-end:url(#arr)}.green{stroke:#16844d;marker-end:url(#arrg)}.red{stroke:#c92a2a;marker-end:url(#arrr);stroke-width:2.8}.blue{stroke:#1f6fb2;marker-end:url(#arrb)}.purple{stroke:#7453c8;marker-end:url(#arrp)}.stop{stroke:#667085;marker-end:url(#arrs);stroke-dasharray:8 7}.dash{stroke-dasharray:8 7}.thin{stroke-width:1.9}.legend{font:12.5px Arial,Helvetica,sans-serif;fill:#344054}.icon{stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="bg" width="1900" height="1080"/>
+  <text class="title" x="950" y="52" text-anchor="middle">Keypoint-Centric Loss and Backpropagation</text>
+  <text class="sub" x="950" y="82" text-anchor="middle">Clean straight-line training figure: frozen KeyNet supervision and trainable fusion-network update</text>
+
+  <rect class="sec" x="55" y="125" width="260" height="760" rx="22"/><text class="sect" x="185" y="155" text-anchor="middle">Batch inputs</text>
+  <rect class="sec" x="350" y="125" width="320" height="760" rx="22"/><text class="sect" x="510" y="155" text-anchor="middle">Trainable model</text>
+  <rect class="sec" x="705" y="125" width="330" height="760" rx="22"/><text class="sect" x="870" y="155" text-anchor="middle">Frozen KeyNet response</text>
+  <rect class="sec" x="1070" y="125" width="445" height="760" rx="22"/><text class="sect" x="1292" y="155" text-anchor="middle">Loss computation</text>
+  <rect class="sec" x="1550" y="125" width="295" height="760" rx="22"/><text class="sect" x="1698" y="155" text-anchor="middle">Update and evaluation</text>
+
+  <rect class="input" x="90" y="205" width="190" height="70"/><text class="bt" x="185" y="234" text-anchor="middle">Visible RGB</text><text class="txt" x="185" y="257" text-anchor="middle">v: B x 3 x H x W</text>
+  <rect class="input" x="90" y="320" width="190" height="70"/><text class="bt" x="185" y="349" text-anchor="middle">Infrared</text><text class="txt" x="185" y="372" text-anchor="middle">i: B x 1 x H x W</text>
+  <rect class="input" x="90" y="435" width="190" height="70"/><text class="bt" x="185" y="464" text-anchor="middle">Reference GT</text><text class="txt" x="185" y="487" text-anchor="middle">gt: B x 3 x H x W</text>
+  <rect class="math" x="90" y="610" width="190" height="112"/><text class="bt" x="185" y="640" text-anchor="middle">Source signals</text><text class="txt" x="185" y="665" text-anchor="middle">vis_y = luma(v)</text><text class="txt" x="185" y="688" text-anchor="middle">g_union = max</text><text class="sm" x="185" y="710" text-anchor="middle">VIS and IR gradients</text>
+
+  <rect class="train" x="385" y="225" width="250" height="245"/><text class="bt" x="510" y="256" text-anchor="middle">KeypointDominantFusionNet</text><text class="txt" x="510" y="284" text-anchor="middle">encoders + DCA blocks</text><text class="txt" x="510" y="307" text-anchor="middle">decoder + prediction heads</text><text class="txt" x="510" y="330" text-anchor="middle">return_aux=True</text><text class="sm" x="510" y="360" text-anchor="middle">fused, pred_rgb, ir_w</text><text class="sm" x="510" y="381" text-anchor="middle">target_y, [w1,w2,w3]</text>
+  <g transform="translate(574,392)"><path d="M24 52 C7 42 8 25 19 12 C20 24 31 24 29 4 C49 21 53 38 43 51 C38 58 29 58 24 52 Z" fill="#ff8a1f" stroke="#b45309" stroke-width="2"/><path d="M28 53 C20 47 22 36 31 27 C32 38 40 39 39 30 C49 42 45 55 36 58 C33 59 30 57 28 53 Z" fill="#ffd166" stroke="#f59e0b" stroke-width="1.5"/></g>
+  <rect class="opt" x="385" y="590" width="250" height="132"/><text class="bt" x="510" y="621" text-anchor="middle">Training mechanics</text><text class="txt" x="510" y="647" text-anchor="middle">AMP + GradScaler</text><text class="txt" x="510" y="670" text-anchor="middle">AdamW, weight decay</text><text class="txt" x="510" y="693" text-anchor="middle">clip grad norm = 0.8</text>
+
+  <rect class="frozen" x="740" y="205" width="260" height="180"/><text class="bt" x="870" y="236" text-anchor="middle">Frozen KeyNetResponse</text><text class="txt" x="870" y="264" text-anchor="middle">KF.KeyNet detector</text><text class="txt" x="870" y="287" text-anchor="middle">eval(), requires_grad=False</text><text class="sm" x="870" y="315" text-anchor="middle">extracts normalized response maps</text>
+  <g transform="translate(933,314)"><circle cx="26" cy="26" r="24" fill="#fff" stroke="#86c5e8" stroke-width="1.6"/><line class="icon" x1="26" y1="6" x2="26" y2="46" stroke="#1d9bd7" stroke-width="3"/><line class="icon" x1="9" y1="16" x2="43" y2="36" stroke="#1d9bd7" stroke-width="3"/><line class="icon" x1="9" y1="36" x2="43" y2="16" stroke="#1d9bd7" stroke-width="3"/><line class="icon" x1="20" y1="12" x2="26" y2="18" stroke="#1d9bd7" stroke-width="2"/><line class="icon" x1="32" y1="12" x2="26" y2="18" stroke="#1d9bd7" stroke-width="2"/><line class="icon" x1="20" y1="40" x2="26" y2="34" stroke="#1d9bd7" stroke-width="2"/><line class="icon" x1="32" y1="40" x2="26" y2="34" stroke="#1d9bd7" stroke-width="2"/></g>
+  <rect class="math" x="740" y="475" width="260" height="178"/><text class="bt" x="870" y="506" text-anchor="middle">Response maps</text><text class="txt" x="870" y="533" text-anchor="middle">rv = KeyNet(mean(v))</text><text class="sm" x="870" y="555" text-anchor="middle">source VIS: no_grad</text><text class="txt" x="870" y="581" text-anchor="middle">ri = KeyNet(i)</text><text class="sm" x="870" y="603" text-anchor="middle">source IR: no_grad</text><text class="txt" x="870" y="629" text-anchor="middle">rf = KeyNet(mean(fused))</text>
+
+  <rect class="loss" x="1105" y="185" width="375" height="150"/><text class="bt" x="1292" y="216" text-anchor="middle">Keypoint loss</text><text class="txt" x="1292" y="242" text-anchor="middle">union = max(rv, ri), peak_w = 1 + 2.5*union</text><text class="txt" x="1292" y="265" text-anchor="middle">kp = 1.8*kp_union + 1.4*kp_miss + 0.3*kp_novel</text><text class="sm" x="1292" y="290" text-anchor="middle">encourages retention of VIS/IR keypoint responses</text>
+  <rect class="loss" x="1105" y="390" width="375" height="108"/><text class="bt" x="1292" y="421" text-anchor="middle">Gradient preservation</text><text class="txt" x="1292" y="448" text-anchor="middle">grad = mean(abs(norm(|grad y_f|) - norm(g_union)))</text><text class="sm" x="1292" y="472" text-anchor="middle">keeps the strongest edge map from the two sources</text>
+  <rect class="loss" x="1105" y="555" width="375" height="128"/><text class="bt" x="1292" y="586" text-anchor="middle">Anchor losses</text><text class="txt" x="1292" y="613" text-anchor="middle">src = mean(abs(y_f - target_y))</text><text class="txt" x="1292" y="636" text-anchor="middle">gt = L1(fused, gt) + 0.5*SSIM(fused, gt)</text><text class="sm" x="1292" y="660" text-anchor="middle">weak convergence and structure anchor</text>
+  <rect class="math" x="1105" y="745" width="375" height="88"/><text class="bt" x="1292" y="777" text-anchor="middle">Total objective</text><text class="txt" x="1292" y="805" text-anchor="middle">L = 1.0*kp + 0.85*grad + 0.20*src + 0.05*gt</text>
+
+  <rect class="opt" x="1580" y="205" width="230" height="124"/><text class="bt" x="1695" y="236" text-anchor="middle">Backpropagation</text><text class="txt" x="1695" y="263" text-anchor="middle">scaler.scale(L).backward()</text><text class="sm" x="1695" y="290" text-anchor="middle">KeyNet frozen; gradients update fusion net</text>
+  <rect class="opt" x="1580" y="385" width="230" height="116"/><text class="bt" x="1695" y="416" text-anchor="middle">Optimizer step</text><text class="txt" x="1695" y="443" text-anchor="middle">unscale -> clip -> step</text><text class="sm" x="1695" y="468" text-anchor="middle">AdamW + GradScaler update</text>
+  <rect class="metric" x="1580" y="585" width="230" height="210"/><text class="bt" x="1695" y="616" text-anchor="middle">Validation metrics</text><text class="txt" x="1695" y="643" text-anchor="middle">top-k response masks</text><text class="sm" x="1695" y="668" text-anchor="middle">ret_vis, ret_ir</text><text class="sm" x="1695" y="690" text-anchor="middle">union_recall</text><text class="sm" x="1695" y="712" text-anchor="middle">union_precision</text><text class="sm" x="1695" y="734" text-anchor="middle">balance_f1</text><text class="txt" x="1695" y="762" text-anchor="middle">overall = 0.5*uR + 0.5*F1</text>
+
+  <!-- Forward lines -->
+  <path class="line blue" d="M280 240 L340 240 L340 300 L385 300"/><path class="line blue" d="M280 355 L340 355 L340 328 L385 328"/>
+  <path class="line green" d="M635 320 L705 320 L705 250 L740 250"/>
+  <path class="line green" d="M635 320 L705 320 L705 629 L740 629"/>
+  <path class="line blue" d="M280 240 L330 240 L330 170 L720 170 L720 533 L740 533"/>
+  <path class="line blue" d="M280 355 L330 355 L330 170 L720 170 L720 581 L740 581"/>
+  <path class="line" d="M280 470 L330 470 L330 735 L1085 735 L1085 620 L1105 620"/>
+  <path class="line" d="M280 666 L330 666 L330 735 L1085 735 L1085 444 L1105 444"/>
+  <path class="line purple" d="M1000 564 L1085 564 L1085 260 L1105 260"/>
+  <path class="line purple" d="M1000 564 L1085 564 L1085 620 L1105 620"/>
+  <path class="line green" d="M635 360 L680 360 L680 735 L1085 735 L1085 620 L1105 620"/>
+
+  <!-- Loss aggregation -->
+  <path class="line purple" d="M1292 335 L1292 390"/><path class="line purple" d="M1292 498 L1292 555"/><path class="line purple" d="M1292 683 L1292 745"/>
+  <path class="line red" d="M1480 789 L1530 789 L1530 267 L1580 267"/>
+  <path class="line red" d="M1695 329 L1695 385"/>
+  <path class="line red" d="M1580 443 L1530 443 L1530 900 L350 900 L350 347 L385 347"/>
+  <text class="sm" x="978" y="946" text-anchor="middle" fill="#c92a2a">optimizer update flows only to KeypointDominantFusionNet parameters</text>
+
+  <!-- Frozen and validation indicators -->
+  <path class="line stop" d="M1000 250 L1042 250 L1042 165 L930 165 L930 205"/>
+  <text class="sm" x="1056" y="181" fill="#667085">frozen KeyNet weights</text>
+  <path class="line stop" d="M870 653 L870 705 L705 705 L705 610"/>
+  <text class="sm" x="720" y="694" fill="#667085">rv, ri source maps use no_grad</text>
+  <path class="line green dash" d="M1000 564 L1030 564 L1030 865 L1540 865 L1540 690 L1580 690"/>
+  <path class="line green dash" d="M635 320 L680 320 L680 170 L1540 170 L1540 640 L1580 640"/>
+
+  <rect x="70" y="910" width="1760" height="110" rx="18" fill="#f8fafc" stroke="#e4e7ec" stroke-width="1.2"/>
+  <text class="legend" x="95" y="942">Faithfulness check: this figure follows KeypointCentricLoss and evaluate_keypoint_retention: KeyNetResponse is frozen, rv/ri are source targets under no_grad, rf supervises fused output, and total loss backpropagates to the fusion model.</text>
+  <text class="legend" x="95" y="970">The trainable network block has a vector fire icon at the bottom right. The frozen KeyNet block has a vector snowflake icon at the bottom right, as requested.</text>
+  <text class="legend" x="95" y="998">Connector convention: green = forward/evaluation, red = backward/update, blue = source inputs, gray dashed = frozen or stopped-gradient boundary.</text>
+</svg>
