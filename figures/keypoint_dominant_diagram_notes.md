@@ -56,3 +56,19 @@ embedded SVG CSS. Use one of these options:
 
 The `*_cvpr_clean.svg` files remain editable source SVGs, while the `*_cvpr_portable.svg`
 files are optimized for robust download/import visibility.
+
+## Dark-outline robust exports
+
+If box outlines are still missing after download/import, use the dark-outline exports. These
+files do not rely on embedded CSS classes and use explicit SVG presentation attributes with
+high-contrast module borders:
+
+- `keypoint_dominant_network_cvpr_dark.svg`
+- `keypoint_dominant_network_cvpr_dark.pdf`
+- `keypoint_dominant_network_cvpr_dark.png`
+- `keypoint_dominant_loss_backprop_cvpr_dark.svg`
+- `keypoint_dominant_loss_backprop_cvpr_dark.pdf`
+- `keypoint_dominant_loss_backprop_cvpr_dark.png`
+
+For slides or quick sharing, the PNG files are the safest because all outlines and connectors
+are rasterized. For vector editing, use the `*_cvpr_dark.svg` files.
