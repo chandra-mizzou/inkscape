@@ -24,3 +24,18 @@ provided `KeypointDominantFusionNet` and `KeypointCentricLoss` implementation.
 
 The SVG files are intended for paper figure editing in vector tools such as Inkscape,
 Illustrator, or directly in LaTeX/PDF conversion workflows.
+
+## Preferred clean CVPR versions
+
+After comparing the provided reference PDF against the implementation, the following
+straight-line SVG/PDF pairs were added as the preferred paper-ready versions:
+
+- `keypoint_dominant_network_cvpr_clean.svg` / `keypoint_dominant_network_cvpr_clean.pdf`
+  - compact architecture figure with mostly orthogonal connectors,
+  - faithful to the provided code and reference diagram,
+  - intended as the main network figure.
+
+- `keypoint_dominant_loss_backprop_cvpr_clean.svg` / `keypoint_dominant_loss_backprop_cvpr_clean.pdf`
+  - compact loss/evaluation/backpropagation figure,
+  - includes the requested fire icon on the trainable fusion network block,
+  - includes the requested snowflake icon on the frozen KeyNet block.
