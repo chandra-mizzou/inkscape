@@ -60,18 +60,18 @@
 
   <!-- Inputs to cues and encoders -->
   <path class="line blue" d="M253 251 L333 251"/><path class="line red" d="M253 386 L333 386"/>
-  <path class="line blue" d="M253 251 L548 251 L548 231 L585 231"/><path class="line red" d="M253 386 L548 386 L548 371 L585 371"/>
-  <path class="line thin" d="M420 340 L420 665"/><path class="line thin" d="M420 500 L420 665"/>
+  <path class="line blue" d="M253 251 L300 251 L300 175 L560 175 L560 231 L585 231"/><path class="line red" d="M253 386 L300 386 L300 520 L560 520 L560 371 L585 371"/>
+  <path class="line thin" d="M507 275 L530 275 L530 708 L507 708"/><path class="line thin" d="M420 500 L420 665"/>
 
   <!-- L1 to DCA -->
   <path class="line blue" d="M745 231 L765 231 L765 286 L785 286"/><path class="line red" d="M745 371 L765 371 L765 320 L785 320"/>
-  <path class="line dash thin" d="M507 708 L770 708 L770 340 L785 340"/>
+  <path class="line dash thin" d="M507 708 L530 708 L530 465 L770 465 L770 340 L785 340"/>
 
   <!-- DCA L1 to L2 -->
   <path class="line blue" d="M960 286 L980 286 L980 231 L1000 231"/><path class="line red" d="M960 320 L980 320 L980 371 L1000 371"/>
 
   <!-- L2 to DCA L2 -->
-  <path class="line blue" d="M1080 272 L1080 490"/><path class="line red" d="M1080 412 L1080 490"/><path class="line dash thin" d="M507 708 L975 708 L975 540 L1000 540"/>
+  <path class="line blue" d="M1160 231 L1195 231 L1195 540 L1175 540"/><path class="line red" d="M1080 412 L1080 490"/><path class="line dash thin" d="M507 708 L530 708 L530 760 L975 760 L975 540 L1000 540"/>
 
   <!-- DCA L2 to L3 -->
   <path class="line blue" d="M1088 590 L1088 620 L865 620 L865 650"/><path class="line red" d="M1088 590 L1088 650"/>
@@ -86,10 +86,10 @@
   <path class="line purple" d="M1392 302 L1392 385"/><path class="line purple" d="M1392 491 L1392 575"/>
 
   <!-- Decoder to heads/reconstruction -->
-  <path class="line green" d="M1485 628 L1515 628 L1515 229 L1570 229"/><path class="line green" d="M1485 628 L1515 628 L1515 229 L1710 229"/>
-  <path class="line green" d="M1768 273 L1768 350"/><path class="line green" d="M1628 273 L1628 540"/>
+  <path class="line green" d="M1485 628 L1515 628 L1515 229 L1570 229"/><path class="line green" d="M1485 628 L1515 628 L1515 160 L1768 160 L1768 185"/>
+  <path class="line green" d="M1768 273 L1768 350"/><path class="line green" d="M1628 273 L1545 273 L1545 598 L1570 598"/>
   <path class="line green" d="M1698 476 L1698 540"/><path class="line green" d="M1698 656 L1698 720"/><path class="line green" d="M1698 812 L1698 845"/>
-  <path class="line thin dash" d="M253 546 L1535 546 L1535 600 L1570 600"/>
+  <path class="line thin dash" d="M253 546 L300 546 L300 920 L1535 920 L1535 600 L1570 600"/>
 
   <rect x="70" y="945" width="1760" height="80" rx="18" fill="#f8fafc" stroke="#e4e7ec" stroke-width="1.2"/>
   <text class="legend" x="95" y="976">Faithfulness check: this figure matches the provided code structure: _content_cue, v1/i1-v3/i3 encoders, ca1-ca3, fuse_top, up2/dec2, up1/dec1, out_rgb, out_ir_w, target_y, pred_mix, luminance ratio color recovery, and auxiliary outputs.</text>
