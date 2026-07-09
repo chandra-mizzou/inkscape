@@ -13,9 +13,7 @@ source "${_VINS_SOURCE_ENV_DIR}/../config/env.sh"
 
 _ok=1
 
-if [[ -f "/opt/ros/${ROS_DISTRO}/setup.bash" ]]; then
-  # shellcheck disable=SC1090
-  source "/opt/ros/${ROS_DISTRO}/setup.bash"
+if vins_source_ros_setup "/opt/ros/${ROS_DISTRO}/setup.bash"; then
   echo "[ok] sourced /opt/ros/${ROS_DISTRO}/setup.bash"
 else
   echo "[missing] ROS 2 (${ROS_DISTRO}) not installed at /opt/ros/${ROS_DISTRO}/"
@@ -23,9 +21,7 @@ else
   _ok=0
 fi
 
-if [[ -f "${ROS2_WS}/install/setup.bash" ]]; then
-  # shellcheck disable=SC1090
-  source "${ROS2_WS}/install/setup.bash"
+if vins_source_ros_setup "${ROS2_WS}/install/setup.bash"; then
   echo "[ok] sourced ${ROS2_WS}/install/setup.bash"
 else
   echo "[missing] ${ROS2_WS}/install/setup.bash"

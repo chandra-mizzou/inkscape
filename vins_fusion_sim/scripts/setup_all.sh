@@ -8,7 +8,9 @@
 #   ./scripts/setup_all.sh --yes        # non-interactive apt where possible
 #   ./scripts/setup_all.sh --python-only
 # =============================================================================
-set -euo pipefail
+# Note: do NOT enable `set -u` here. ROS setup.bash and many apt/helper
+# scripts reference optional unset variables (e.g. AMENT_TRACE_SETUP_FILES).
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
@@ -87,8 +89,8 @@ if [[ ! -f "/opt/ros/${ROS_DISTRO}/setup.bash" ]]; then
   APT ros-${ROS_DISTRO}-desktop
 fi
 
-# shellcheck disable=SC1090
-source "/opt/ros/${ROS_DISTRO}/setup.bash"
+# ROS setup.bash is incompatible with `set -u` (AMENT_TRACE_SETUP_FILES etc.)
+vins_source_ros_setup "/opt/ros/${ROS_DISTRO}/setup.bash"
 
 APT \
   ros-${ROS_DISTRO}-cv-bridge \

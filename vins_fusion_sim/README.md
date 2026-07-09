@@ -204,6 +204,7 @@ In QGroundControl:
 | Symptom | Likely cause | Fix |
 |---------|----------------|-----|
 | `~/vins_ws/install/setup.bash: No such file or directory` | Workspace never built | Run `./scripts/setup_all.sh --yes`, then `source scripts/source_env.sh` |
+| `AMENT_TRACE_SETUP_FILES: unbound variable` | `set -u` + ROS setup.bash | Pull latest scripts (fixed via `vins_source_ros_setup`); or run `set +u` before sourcing ROS |
 | No Gazebo window | DISPLAY / GPU / first PX4 build | Run T1 alone; finish `make px4_sitl gz_x500_mono_cam` |
 | QGC no vehicle | SITL not up / firewall | Wait for T1; confirm UDP 14550 |
 | No `/cam0/image_raw` | Wrong Gazebo topic name | `gz topic -l \| grep image` and set `GZ_IMAGE_TOPIC` / `GZ_MODEL_NAME` in `config/env.sh` |

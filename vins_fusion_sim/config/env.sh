@@ -46,16 +46,44 @@ export XRCE_PORT="${XRCE_PORT:-8888}"
 # Terminal emulator preference (gnome-terminal | tmux | xterm)
 export TERM_BACKEND="${TERM_BACKEND:-auto}"
 
-# Source ROS 2 if available
-if [[ -f "/opt/ros/${ROS_DISTRO}/setup.bash" ]]; then
+# ---------------------------------------------------------------------------
+# Safely source ament/ROS setup scripts under `set -u`.
+# ROS setup.bash references optional vars (e.g. AMENT_TRACE_SETUP_FILES)
+# that are unbound by default and trip nounset.
+# ---------------------------------------------------------------------------
+vins_source_ros_setup() {
+  local setup_file="$1"
+  if [[ ! -f "${setup_file}" ]]; then
+    return 1
+  fi
+  # Pre-define optional ament vars so older/newer setups are both happy
+  export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
+  export AMENT_PYTHON_EXECUTABLE="${AMENT_PYTHON_EXECUTABLE:-}"
+  export COLCON_TRACE="${COLCON_TRACE:-}"
+  export COLCON_PYTHON_EXECUTABLE="${COLCON_PYTHON_EXECUTABLE:-}"
+  export AMENT_PREFIX_PATH="${AMENT_PREFIX_PATH:-}"
+  export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}"
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
+  export PATH="${PATH:-}"
+  export PYTHONPATH="${PYTHONPATH:-}"
+
+  local _nounset_was_on=0
+  if [[ $- == *u* ]]; then
+    _nounset_was_on=1
+    set +u
+  fi
   # shellcheck disable=SC1090
-  source "/opt/ros/${ROS_DISTRO}/setup.bash"
-fi
+  source "${setup_file}"
+  if [[ "${_nounset_was_on}" -eq 1 ]]; then
+    set -u
+  fi
+  return 0
+}
+
+# Source ROS 2 if available
+vins_source_ros_setup "/opt/ros/${ROS_DISTRO}/setup.bash" || true
 
 # Source workspace overlays if built
-if [[ -f "${ROS2_WS}/install/setup.bash" ]]; then
-  # shellcheck disable=SC1090
-  source "${ROS2_WS}/install/setup.bash"
-fi
+vins_source_ros_setup "${ROS2_WS}/install/setup.bash" || true
 
 mkdir -p "${OUTPUT_DIR}"
