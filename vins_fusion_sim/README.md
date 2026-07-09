@@ -84,9 +84,21 @@ python3 -m pip install -r requirements.txt
 
 ### 2. Source your environment
 
+> **Important:** `~/vins_ws/install/setup.bash` does **not** exist until step 1 finishes.
+> If you see `No such file or directory`, run `./scripts/setup_all.sh --yes` first
+> (that creates `~/vins_ws`, clones VINS-Fusion + px4_msgs, and runs `colcon build`).
+
+Preferred (checks paths and prints a clear fix if something is missing):
+
+```bash
+source scripts/source_env.sh
+```
+
+Or manually:
+
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/vins_ws/install/setup.bash
+source ~/vins_ws/install/setup.bash   # only after setup_all.sh / colcon build
 export PX4_DIR=$HOME/PX4-Autopilot
 export ROS2_WS=$HOME/vins_ws
 export QGC_APPIMAGE=$HOME/QGroundControl.AppImage
@@ -191,6 +203,7 @@ In QGroundControl:
 
 | Symptom | Likely cause | Fix |
 |---------|----------------|-----|
+| `~/vins_ws/install/setup.bash: No such file or directory` | Workspace never built | Run `./scripts/setup_all.sh --yes`, then `source scripts/source_env.sh` |
 | No Gazebo window | DISPLAY / GPU / first PX4 build | Run T1 alone; finish `make px4_sitl gz_x500_mono_cam` |
 | QGC no vehicle | SITL not up / firewall | Wait for T1; confirm UDP 14550 |
 | No `/cam0/image_raw` | Wrong Gazebo topic name | `gz topic -l \| grep image` and set `GZ_IMAGE_TOPIC` / `GZ_MODEL_NAME` in `config/env.sh` |

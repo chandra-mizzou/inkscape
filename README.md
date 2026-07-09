@@ -8,9 +8,12 @@ All simulation assets live in [`vins_fusion_sim/`](vins_fusion_sim/):
 
 ```bash
 cd vins_fusion_sim
-./scripts/setup_all.sh --yes          # install ROS2, PX4, Gazebo, VINS, QGC, pip deps
+./scripts/setup_all.sh --yes          # creates ~/vins_ws and builds it (required first)
+source scripts/source_env.sh          # sources ROS2 + ~/vins_ws/install/setup.bash
 ./scripts/run_vins_fusion_sim.sh      # open T1–T9 terminals and start the stack
 ```
+
+If `source ~/vins_ws/install/setup.bash` fails with “No such file”, the workspace was never built — run `setup_all.sh` first.
 
 - **Full guide** (steps, what to expect, troubleshooting): [`vins_fusion_sim/README.md`](vins_fusion_sim/README.md)
 - **Python helpers**: [`vins_fusion_sim/requirements.txt`](vins_fusion_sim/requirements.txt)
