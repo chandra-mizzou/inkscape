@@ -181,6 +181,10 @@ Startup is staggered so Gazebo and bridges come up before VINS.
 6. **VINS-Fusion** prints initialization messages. Until the drone moves with enough parallax, pose may stay near the origin.
 7. **RViz2** shows `/image_track` (feature tracks) once VINS is running, and `/odometry` / `/path` after motion.
 
+> **Gazebo + RViz open but “nothing happens” is normal until you fly.**  
+> VINS does not move the drone. Use QGC (or `./scripts/10_demo_takeoff.sh`) to Arm → Takeoff → fly a figure-8.  
+> Inspect other tmux windows (`Ctrl-b` then `3`/`5` for bridge/VINS) or run `./scripts/check_status.sh`.
+
 ### Flying for good VIO
 
 In QGroundControl:
