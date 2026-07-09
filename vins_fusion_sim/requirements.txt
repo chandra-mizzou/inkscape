@@ -1,0 +1,38 @@
+# =============================================================================
+# Python dependencies for VINS-Fusion VIO simulation helpers
+# (topic remapper, PX4 vision bridge, calibration dump)
+#
+# System / ROS / PX4 / Gazebo packages are installed by scripts/setup_all.sh
+# — they are NOT pip-installable. See README.md "System requirements".
+#
+# Install:
+#   python3 -m pip install -r requirements.txt
+#   # or
+#   ./scripts/setup_all.sh --python-only
+# =============================================================================
+
+# Core numerics
+numpy>=1.21,<2.0
+scipy>=1.7
+
+# YAML / config helpers
+PyYAML>=6.0
+ruamel.yaml>=0.17
+
+# Image / CV utilities used by helper scripts and optional notebooks
+opencv-python-headless>=4.5,<4.11
+Pillow>=9.0
+
+# Transformations / quaternions (ENU<->NED helpers)
+transforms3d>=0.4.1
+
+# Optional: MAVLink / MAVSDK for alternate offboard control demos
+pymavlink>=2.4.37
+mavsdk>=1.4.0
+
+# Optional: plotting VIO trajectories after a run
+matplotlib>=3.5
+
+# Linting / quality (dev)
+# flake8>=6.0
+# black>=23.0
