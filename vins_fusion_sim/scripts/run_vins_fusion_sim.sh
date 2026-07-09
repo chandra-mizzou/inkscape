@@ -42,6 +42,42 @@ for arg in "$@"; do
 done
 
 # ---------------------------------------------------------------------------
+# Clear Snap / VS Code env pollution that breaks host GUI apps
+# (GTK_PATH pointing into /snap/core20 → __libc_pthread_init / GLIBC_PRIVATE)
+# ---------------------------------------------------------------------------
+sanitize_snap_env() {
+  unset GTK_PATH || true
+  unset GIO_MODULE_DIR || true
+  unset GDK_PIXBUF_MODULE_FILE || true
+  unset GDK_PIXBUF_MODULEDIR || true
+  # Drop snap library path entries if present (keep the rest)
+  if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
+    local cleaned="" part
+    IFS=':' read -ra _ld_parts <<< "${LD_LIBRARY_PATH}"
+    for part in "${_ld_parts[@]}"; do
+      [[ -z "${part}" ]] && continue
+      [[ "${part}" == /snap/* ]] && continue
+      if [[ -z "${cleaned}" ]]; then
+        cleaned="${part}"
+      else
+        cleaned="${cleaned}:${part}"
+      fi
+    done
+    export LD_LIBRARY_PATH="${cleaned}"
+  fi
+}
+
+gnome_terminal_works() {
+  command -v gnome-terminal >/dev/null 2>&1 || return 1
+  [[ -n "${DISPLAY:-}" ]] || return 1
+  # Probe without opening a lasting window; snap pollution fails here.
+  if gnome-terminal --version >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
+# ---------------------------------------------------------------------------
 # Detect terminal backend
 # ---------------------------------------------------------------------------
 detect_backend() {
@@ -53,7 +89,7 @@ detect_backend() {
     echo "${TERM_BACKEND}"
     return
   fi
-  if command -v gnome-terminal >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
+  if gnome_terminal_works; then
     echo "gnome-terminal"
   elif command -v tmux >/dev/null 2>&1; then
     echo "tmux"
@@ -64,6 +100,7 @@ detect_backend() {
   fi
 }
 
+sanitize_snap_env
 BACKEND="$(detect_backend)"
 SESSION_NAME="vins-fusion-vio"
 LOG_DIR="${VINS_SIM_DIR}/logs"
@@ -147,8 +184,29 @@ print_plan() {
 
 launch_gnome() {
   local i
+  sanitize_snap_env
+  if ! gnome_terminal_works; then
+    echo "[WARN] gnome-terminal is broken in this shell (often Snap/VS Code GTK_PATH)."
+    echo "       Falling back to tmux. Fix permanently with:"
+    echo "         unset GTK_PATH GIO_MODULE_DIR"
+    echo "       Or always launch with:  ./scripts/run_vins_fusion_sim.sh --tmux"
+    if command -v tmux >/dev/null 2>&1; then
+      launch_tmux
+      return
+    fi
+    echo "[WARN] tmux not found — trying xterm / sequential."
+    if command -v xterm >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
+      launch_xterm
+      return
+    fi
+    launch_sequential
+    return
+  fi
   for i in "${!TITLES[@]}"; do
-    gnome-terminal --title="${TITLES[$i]}" -- bash -lc "${CMDS[$i]}; echo; echo '[${TITLES[$i]}] exited — press Enter'; read -r"
+    # env -u clears snap vars even if the parent re-exported them
+    env -u GTK_PATH -u GIO_MODULE_DIR -u GDK_PIXBUF_MODULE_FILE \
+      gnome-terminal --title="${TITLES[$i]}" -- \
+      bash -lc "${CMDS[$i]}; echo; echo '[${TITLES[$i]}] exited — press Enter'; read -r"
     sleep 0.4
   done
 }
@@ -251,7 +309,10 @@ fi
 
 case "${BACKEND}" in
   gnome-terminal) launch_gnome ;;
-  xterm)          launch_xterm ;;
+  xterm)
+    sanitize_snap_env
+    launch_xterm
+    ;;
   tmux)           launch_tmux ;;
   sequential)     launch_sequential ;;
   *)

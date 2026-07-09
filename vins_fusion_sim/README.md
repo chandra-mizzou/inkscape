@@ -112,6 +112,21 @@ Optional: put those lines in `~/.bashrc`. Paths can be overridden in `config/env
 ./scripts/run_vins_fusion_sim.sh
 ```
 
+If you are inside a **Snap VS Code / Cursor terminal** and see
+`__libc_pthread_init` / `GLIBC_PRIVATE`, either:
+
+```bash
+unset GTK_PATH GIO_MODULE_DIR
+./scripts/run_vins_fusion_sim.sh
+```
+
+or skip gnome-terminal entirely:
+
+```bash
+./scripts/run_vins_fusion_sim.sh --tmux
+# then:  tmux attach -t vins-fusion-vio
+```
+
 Useful flags:
 
 ```bash
@@ -205,6 +220,7 @@ In QGroundControl:
 |---------|----------------|-----|
 | `~/vins_ws/install/setup.bash: No such file or directory` | Workspace never built | Run `./scripts/setup_all.sh --yes`, then `source scripts/source_env.sh` |
 | `AMENT_TRACE_SETUP_FILES: unbound variable` | `set -u` + ROS setup.bash | Pull latest scripts (fixed via `vins_source_ros_setup`); or run `set +u` before sourcing ROS |
+| `gnome-terminal ... __libc_pthread_init` / `GLIBC_PRIVATE` | Snap (often VS Code) polluted `GTK_PATH` / `GIO_MODULE_DIR` | `unset GTK_PATH GIO_MODULE_DIR` then rerun, or `./scripts/run_vins_fusion_sim.sh --tmux` |
 | No Gazebo window | DISPLAY / GPU / first PX4 build | Run T1 alone; finish `make px4_sitl gz_x500_mono_cam` |
 | QGC no vehicle | SITL not up / firewall | Wait for T1; confirm UDP 14550 |
 | No `/cam0/image_raw` | Wrong Gazebo topic name | `gz topic -l \| grep image` and set `GZ_IMAGE_TOPIC` / `GZ_MODEL_NAME` in `config/env.sh` |
