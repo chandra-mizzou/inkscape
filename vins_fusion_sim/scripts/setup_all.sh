@@ -163,8 +163,22 @@ fi
 
 # ---------------------------------------------------------------------------
 # QGroundControl AppImage
+# Use v4.4.3 on Ubuntu 22.04 (GLIBC 2.35). Cloudfront "latest"/v5 needs GLIBC 2.36+.
 # ---------------------------------------------------------------------------
-if [[ ! -x "${QGC_APPIMAGE}" ]]; then
+QGC_COMPAT_URL="${QGC_COMPAT_URL:-https://github.com/mavlink/qgroundcontrol/releases/download/v4.4.3/QGroundControl.AppImage}"
+QGC_COMPAT_PATH="${QGC_COMPAT_PATH:-$HOME/QGroundControl-v4.4.3.AppImage}"
+_host_glibc="$(ldd --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+$' || echo 0.0)"
+_need_compat=0
+awk -v a="${_host_glibc}" 'BEGIN{split(a,p,"."); exit !((p[1]<2) || (p[1]==2 && p[2]<36))}' && _need_compat=1 || true
+
+if [[ "${_need_compat}" -eq 1 ]]; then
+  echo "Host GLIBC ${_host_glibc} < 2.36 — installing QGC v4.4.3 (Ubuntu 22.04 compatible)"
+  if [[ ! -x "${QGC_COMPAT_PATH}" ]]; then
+    wget -O "${QGC_COMPAT_PATH}" "${QGC_COMPAT_URL}" || true
+    chmod +x "${QGC_COMPAT_PATH}" || true
+  fi
+  export QGC_APPIMAGE="${QGC_COMPAT_PATH}"
+elif [[ ! -x "${QGC_APPIMAGE}" ]]; then
   echo "Downloading QGroundControl AppImage -> ${QGC_APPIMAGE}"
   wget -O "${QGC_APPIMAGE}" \
     "https://d176tv9ibo4jno.cloudfront.net/latest/QGroundControl.AppImage" || true

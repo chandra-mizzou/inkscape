@@ -10,7 +10,14 @@ export VINS_SIM_DIR="${VINS_SIM_DIR:-$_VINS_SIM_DIR}"
 
 # --- Host paths (edit these to match your machine) ---
 export PX4_DIR="${PX4_DIR:-$HOME/PX4-Autopilot}"
-export QGC_APPIMAGE="${QGC_APPIMAGE:-$HOME/QGroundControl.AppImage}"
+# Prefer v4.4.3 on Ubuntu 22.04 if present (latest AppImage needs GLIBC 2.36+)
+if [[ -z "${QGC_APPIMAGE:-}" ]]; then
+  if [[ -f "${HOME}/QGroundControl-v4.4.3.AppImage" ]]; then
+    export QGC_APPIMAGE="${HOME}/QGroundControl-v4.4.3.AppImage"
+  else
+    export QGC_APPIMAGE="${HOME}/QGroundControl.AppImage"
+  fi
+fi
 export ROS2_WS="${ROS2_WS:-$HOME/vins_ws}"
 export VINS_CONFIG="${VINS_CONFIG:-$VINS_SIM_DIR/config/gazebo_mono_imu_config.yaml}"
 export OUTPUT_DIR="${OUTPUT_DIR:-$HOME/vins_output}"

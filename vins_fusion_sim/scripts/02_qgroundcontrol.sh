@@ -1,45 +1,50 @@
 #!/usr/bin/env bash
 # T2 — QGroundControl
-# Finds AppImage under $HOME even if not marked executable / slightly renamed.
+# Ubuntu 22.04 (GLIBC 2.35) cannot run the newest "latest"/v5 AppImage (needs 2.36+).
+# Prefer QGC v4.4.3 on hosts with GLIBC < 2.36.
 set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../config/env.sh"
 
+QGC_COMPAT_URL="${QGC_COMPAT_URL:-https://github.com/mavlink/qgroundcontrol/releases/download/v4.4.3/QGroundControl.AppImage}"
+QGC_COMPAT_PATH="${QGC_COMPAT_PATH:-$HOME/QGroundControl-v4.4.3.AppImage}"
+
 echo "[T2] Starting QGroundControl"
-echo "     Looking for AppImage (QGC_APPIMAGE=${QGC_APPIMAGE})"
 echo "     Waiting a few seconds so PX4 SITL can bind UDP 14550..."
 sleep 5
 
-# Clear Snap GTK pollution that can break AppImage/GUI launch from VS Code terminals
 unset GTK_PATH GIO_MODULE_DIR GDK_PIXBUF_MODULE_FILE || true
 
-find_qgc() {
-  local candidate
-  local candidates=(
-    "${QGC_APPIMAGE}"
-    "${HOME}/QGroundControl.AppImage"
-    "${HOME}/QGroundControl-x86_64.AppImage"
-    "${HOME}/Downloads/QGroundControl.AppImage"
-    "${HOME}/Downloads/QGroundControl-x86_64.AppImage"
-    "${HOME}/Desktop/QGroundControl.AppImage"
-    "${HOME}/Applications/QGroundControl.AppImage"
-    "/opt/QGroundControl/QGroundControl.AppImage"
-  )
+host_glibc() {
+  ldd --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+$' || echo "0.0"
+}
 
-  for candidate in "${candidates[@]}"; do
-    if [[ -f "${candidate}" ]]; then
-      echo "${candidate}"
-      return 0
-    fi
-  done
+# True when host GLIBC is older than 2.36 (Ubuntu 22.04 = 2.35)
+needs_compat_qgc() {
+  local v
+  v="$(host_glibc)"
+  awk -v a="$v" 'BEGIN{split(a,p,"."); exit !((p[1]<2) || (p[1]==2 && p[2]<36))}'
+}
 
-  candidate="$(find "${HOME}" -maxdepth 3 -type f -iname 'QGroundControl*.AppImage' 2>/dev/null | head -n1 || true)"
-  if [[ -n "${candidate}" ]]; then
-    echo "${candidate}"
-    return 0
+download_compat_qgc() {
+  echo "[T2] Downloading Ubuntu 22.04-compatible QGC v4.4.3"
+  echo "     -> ${QGC_COMPAT_PATH}"
+  echo "     URL: ${QGC_COMPAT_URL}"
+  if command -v wget >/dev/null 2>&1; then
+    wget -O "${QGC_COMPAT_PATH}" "${QGC_COMPAT_URL}"
+  else
+    curl -fL -o "${QGC_COMPAT_PATH}" "${QGC_COMPAT_URL}"
   fi
-  return 1
+  chmod +x "${QGC_COMPAT_PATH}"
+}
+
+ensure_executable() {
+  local app="$1"
+  if [[ ! -x "${app}" ]]; then
+    echo "[T2] chmod +x \"${app}\""
+    chmod +x "${app}"
+  fi
 }
 
 # 1) PATH binary
@@ -48,51 +53,59 @@ if command -v QGroundControl >/dev/null 2>&1; then
   exec QGroundControl
 fi
 
-# 2) AppImage (configured path or discovered)
-if QGC_PATH="$(find_qgc)"; then
-  export QGC_APPIMAGE="${QGC_PATH}"
-  echo "[T2] Found: ${QGC_PATH}"
-  ls -la "${QGC_PATH}"
-
-  if [[ ! -x "${QGC_PATH}" ]]; then
-    echo "[T2] Not executable — running: chmod +x \"${QGC_PATH}\""
-    chmod +x "${QGC_PATH}"
+# 2) On Ubuntu 22.04 / old GLIBC: use v4.4.3 (not cloudfront "latest")
+if needs_compat_qgc; then
+  echo "[T2] Host GLIBC $(host_glibc) < 2.36 — using QGC v4.4.3 (22.04-compatible)"
+  if [[ ! -f "${QGC_COMPAT_PATH}" ]]; then
+    download_compat_qgc
   fi
-
-  # FUSE is often missing/blocked; extract-and-run is more reliable
-  if [[ "${QGC_FORCE_EXTRACT:-0}" == "1" ]] || ! lsmod 2>/dev/null | grep -q fuse; then
-    echo "[T2] Launching with --appimage-extract-and-run (no/blocked FUSE or forced)"
-    exec "${QGC_PATH}" --appimage-extract-and-run
+  ensure_executable "${QGC_COMPAT_PATH}"
+  export QGC_APPIMAGE="${QGC_COMPAT_PATH}"
+  echo "[T2] Launching ${QGC_APPIMAGE}"
+  if [[ "${QGC_FORCE_EXTRACT:-0}" == "1" ]]; then
+    exec "${QGC_APPIMAGE}" --appimage-extract-and-run
   fi
-
-  echo "[T2] Launching AppImage..."
-  exec "${QGC_PATH}"
+  exec "${QGC_APPIMAGE}"
 fi
 
-# 3) Flatpak
-if command -v flatpak >/dev/null 2>&1 && flatpak list 2>/dev/null | grep -qi qgroundcontrol; then
-  echo "[T2] Using Flatpak QGroundControl"
-  exec flatpak run org.mavlink.qgroundcontrol
+# 3) Newer host: try configured / common AppImage paths
+for candidate in \
+  "${QGC_APPIMAGE}" \
+  "${QGC_COMPAT_PATH}" \
+  "${HOME}/QGroundControl.AppImage" \
+  "${HOME}/QGroundControl-x86_64.AppImage" \
+  "${HOME}/Downloads/QGroundControl.AppImage"
+do
+  if [[ -f "${candidate}" ]]; then
+    ensure_executable "${candidate}"
+    export QGC_APPIMAGE="${candidate}"
+    echo "[T2] Launching ${QGC_APPIMAGE}"
+    if [[ "${QGC_FORCE_EXTRACT:-0}" == "1" ]]; then
+      exec "${QGC_APPIMAGE}" --appimage-extract-and-run
+    fi
+    exec "${QGC_APPIMAGE}"
+  fi
+done
+
+# 4) Flatpak
+if command -v flatpak >/dev/null 2>&1; then
+  if flatpak list 2>/dev/null | grep -qi qgroundcontrol; then
+    echo "[T2] Using Flatpak QGroundControl"
+    exec flatpak run org.mavlink.qgroundcontrol
+  fi
+  echo "[T2] Tip: flatpak install flathub org.mavlink.qgroundcontrol"
 fi
 
-# 4) lowercase binary name
-if command -v qgroundcontrol >/dev/null 2>&1; then
-  exec qgroundcontrol
-fi
-
-echo "ERROR: QGroundControl not found."
+echo "ERROR: QGroundControl not found / not runnable."
 echo ""
-echo "Checked:"
-echo "  ${QGC_APPIMAGE}"
-echo "  ${HOME}/QGroundControl.AppImage"
-echo "  ${HOME}/Downloads/QGroundControl*.AppImage"
-echo ""
-echo "If the file exists under another name:"
-echo "  ls -la \$HOME/*QGround* \$HOME/Downloads/*QGround* 2>/dev/null"
-echo "  export QGC_APPIMAGE=/exact/path/to/file.AppImage"
-echo "  chmod +x \"\$QGC_APPIMAGE\""
+echo "Your 'latest' AppImage needs GLIBC 2.36+ (Ubuntu 24.04)."
+echo "On Ubuntu 22.04 install QGC v4.4.3 instead:"
+echo "  wget -O \$HOME/QGroundControl-v4.4.3.AppImage \\"
+echo "    ${QGC_COMPAT_URL}"
+echo "  chmod +x \$HOME/QGroundControl-v4.4.3.AppImage"
+echo "  export QGC_APPIMAGE=\$HOME/QGroundControl-v4.4.3.AppImage"
 echo "  ./scripts/02_qgroundcontrol.sh"
 echo ""
-echo "Or relaunch with:  ./scripts/run_vins_fusion_sim.sh --tmux --no-qgc"
-ls -la "${HOME}/QGroundControl"* "${HOME}/Downloads/QGroundControl"* 2>/dev/null || true
+echo "Or skip QGC: ./scripts/run_vins_fusion_sim.sh --tmux --no-qgc"
+echo "  (fly with ./scripts/10_demo_takeoff.sh)"
 exit 1

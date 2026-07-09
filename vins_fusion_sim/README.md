@@ -226,6 +226,7 @@ In QGroundControl:
 | `AMENT_TRACE_SETUP_FILES: unbound variable` | `set -u` + ROS setup.bash | Pull latest scripts (fixed via `vins_source_ros_setup`); or run `set +u` before sourcing ROS |
 | `gnome-terminal ... __libc_pthread_init` / `GLIBC_PRIVATE` | Snap (often VS Code) polluted `GTK_PATH` / `GIO_MODULE_DIR` | `unset GTK_PATH GIO_MODULE_DIR` then rerun, or `./scripts/run_vins_fusion_sim.sh --tmux` |
 | `ERROR: QGroundControl not found` but AppImage is in `$HOME` | File not executable, or name ≠ `QGroundControl.AppImage` | `chmod +x ~/QGroundControl*.AppImage` then `export QGC_APPIMAGE=~/QGroundControl.AppImage` (or exact path) and re-run T2 |
+| `GLIBC_2.36` / `GLIBC_2.38` not found when starting QGC | Newest QGC AppImage needs Ubuntu 24.04 libs | Download **v4.4.3**: `wget -O ~/QGroundControl-v4.4.3.AppImage https://github.com/mavlink/qgroundcontrol/releases/download/v4.4.3/QGroundControl.AppImage && chmod +x ~/QGroundControl-v4.4.3.AppImage` then `export QGC_APPIMAGE=~/QGroundControl-v4.4.3.AppImage` |
 | No Gazebo window | DISPLAY / GPU / first PX4 build | Run T1 alone; finish `make px4_sitl gz_x500_mono_cam` |
 | QGC no vehicle | SITL not up / firewall | Wait for T1; confirm UDP 14550 |
 | No `/cam0/image_raw` | Wrong Gazebo topic name | `gz topic -l \| grep image` and set `GZ_IMAGE_TOPIC` / `GZ_MODEL_NAME` in `config/env.sh` |
