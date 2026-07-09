@@ -2,6 +2,7 @@
 # T2 — QGroundControl
 # Ubuntu 22.04 (GLIBC 2.35) cannot run the newest "latest"/v5 AppImage (needs 2.36+).
 # Prefer QGC v4.4.3 on hosts with GLIBC < 2.36.
+# If FUSE/libfuse.so.2 is missing, use --appimage-extract-and-run automatically.
 set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
@@ -17,14 +18,29 @@ sleep 5
 unset GTK_PATH GIO_MODULE_DIR GDK_PIXBUF_MODULE_FILE || true
 
 host_glibc() {
-  ldd --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+$' || echo "0.0"
+  # Prefer the last field of the first line: "ldd (Ubuntu GLIBC 2.35-0ubuntu3.8) 2.35"
+  ldd --version 2>/dev/null | awk 'NR==1{print $NF; exit}' || echo "0.0"
 }
 
 # True when host GLIBC is older than 2.36 (Ubuntu 22.04 = 2.35)
 needs_compat_qgc() {
   local v
   v="$(host_glibc)"
-  awk -v a="$v" 'BEGIN{split(a,p,"."); exit !((p[1]<2) || (p[1]==2 && p[2]<36))}'
+  awk -v a="$v" 'BEGIN{split(a,p,"."); exit !((p[1]+0<2) || (p[1]+0==2 && p[2]+0<36))}'
+}
+
+fuse_available() {
+  # AppImage type-2 needs libfuse.so.2 (package: libfuse2 on Ubuntu)
+  if [[ "${QGC_FORCE_EXTRACT:-0}" == "1" ]]; then
+    return 1
+  fi
+  if ldconfig -p 2>/dev/null | grep -q 'libfuse\.so\.2'; then
+    return 0
+  fi
+  if [[ -e /usr/lib/x86_64-linux-gnu/libfuse.so.2 ]] || [[ -e /lib/x86_64-linux-gnu/libfuse.so.2 ]]; then
+    return 0
+  fi
+  return 1
 }
 
 download_compat_qgc() {
@@ -47,6 +63,22 @@ ensure_executable() {
   fi
 }
 
+launch_appimage() {
+  local app="$1"
+  ensure_executable "${app}"
+  export QGC_APPIMAGE="${app}"
+  echo "[T2] Launching ${app}"
+
+  if fuse_available; then
+    echo "[T2] FUSE/libfuse.so.2 detected — normal AppImage mount"
+    exec "${app}"
+  fi
+
+  echo "[T2] FUSE/libfuse.so.2 not available — using --appimage-extract-and-run"
+  echo "     (optional permanent fix: sudo apt install libfuse2)"
+  exec "${app}" --appimage-extract-and-run
+}
+
 # 1) PATH binary
 if command -v QGroundControl >/dev/null 2>&1; then
   echo "[T2] Using QGroundControl from PATH: $(command -v QGroundControl)"
@@ -59,31 +91,20 @@ if needs_compat_qgc; then
   if [[ ! -f "${QGC_COMPAT_PATH}" ]]; then
     download_compat_qgc
   fi
-  ensure_executable "${QGC_COMPAT_PATH}"
-  export QGC_APPIMAGE="${QGC_COMPAT_PATH}"
-  echo "[T2] Launching ${QGC_APPIMAGE}"
-  if [[ "${QGC_FORCE_EXTRACT:-0}" == "1" ]]; then
-    exec "${QGC_APPIMAGE}" --appimage-extract-and-run
-  fi
-  exec "${QGC_APPIMAGE}"
+  launch_appimage "${QGC_COMPAT_PATH}"
 fi
 
 # 3) Newer host: try configured / common AppImage paths
 for candidate in \
   "${QGC_APPIMAGE}" \
   "${QGC_COMPAT_PATH}" \
+  "${HOME}/QGroundControl-v4.4.3.AppImage" \
   "${HOME}/QGroundControl.AppImage" \
   "${HOME}/QGroundControl-x86_64.AppImage" \
   "${HOME}/Downloads/QGroundControl.AppImage"
 do
   if [[ -f "${candidate}" ]]; then
-    ensure_executable "${candidate}"
-    export QGC_APPIMAGE="${candidate}"
-    echo "[T2] Launching ${QGC_APPIMAGE}"
-    if [[ "${QGC_FORCE_EXTRACT:-0}" == "1" ]]; then
-      exec "${QGC_APPIMAGE}" --appimage-extract-and-run
-    fi
-    exec "${QGC_APPIMAGE}"
+    launch_appimage "${candidate}"
   fi
 done
 
@@ -98,13 +119,12 @@ fi
 
 echo "ERROR: QGroundControl not found / not runnable."
 echo ""
-echo "Your 'latest' AppImage needs GLIBC 2.36+ (Ubuntu 24.04)."
-echo "On Ubuntu 22.04 install QGC v4.4.3 instead:"
-echo "  wget -O \$HOME/QGroundControl-v4.4.3.AppImage \\"
-echo "    ${QGC_COMPAT_URL}"
-echo "  chmod +x \$HOME/QGroundControl-v4.4.3.AppImage"
-echo "  export QGC_APPIMAGE=\$HOME/QGroundControl-v4.4.3.AppImage"
-echo "  ./scripts/02_qgroundcontrol.sh"
+echo "On Ubuntu 22.04:"
+echo "  1) Use QGC v4.4.3 AppImage (already preferred by this script)"
+echo "  2) If you see 'error loading libfuse.so.2':"
+echo "       sudo apt install libfuse2"
+echo "     or run without FUSE:"
+echo "       \$HOME/QGroundControl-v4.4.3.AppImage --appimage-extract-and-run"
 echo ""
 echo "Or skip QGC: ./scripts/run_vins_fusion_sim.sh --tmux --no-qgc"
 echo "  (fly with ./scripts/10_demo_takeoff.sh)"
