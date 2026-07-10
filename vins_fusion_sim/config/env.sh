@@ -37,9 +37,13 @@ export PX4_GZ_MODEL_POSE="${PX4_GZ_MODEL_POSE:-0,0,0.1,0,0,0}"
 export GZ_MODEL_NAME="${GZ_MODEL_NAME:-x500_mono_cam_0}"
 export GZ_WORLD_NAME="${GZ_WORLD_NAME:-default}"
 
-# Gazebo sensor topic stems (verified against PX4 gz_x500_mono_cam)
-export GZ_IMAGE_TOPIC="${GZ_IMAGE_TOPIC:-/world/${GZ_WORLD_NAME}/model/${GZ_MODEL_NAME}/link/camera_link/sensor/imager/image}"
-export GZ_CAMERA_INFO_TOPIC="${GZ_CAMERA_INFO_TOPIC:-/world/${GZ_WORLD_NAME}/model/${GZ_MODEL_NAME}/link/camera_link/sensor/imager/camera_info}"
+# Gazebo transport — force localhost (avoids empty bridges / disc-zmq warnings)
+export GZ_IP="${GZ_IP:-127.0.0.1}"
+
+# Gazebo sensor topic stems (PX4 x500_mono_cam uses sensor/camera/ on many builds;
+# older trees used sensor/imager/ — T4 auto-discovers either)
+export GZ_IMAGE_TOPIC="${GZ_IMAGE_TOPIC:-/world/${GZ_WORLD_NAME}/model/${GZ_MODEL_NAME}/link/camera_link/sensor/camera/image}"
+export GZ_CAMERA_INFO_TOPIC="${GZ_CAMERA_INFO_TOPIC:-/world/${GZ_WORLD_NAME}/model/${GZ_MODEL_NAME}/link/camera_link/sensor/camera/camera_info}"
 export GZ_IMU_TOPIC="${GZ_IMU_TOPIC:-/world/${GZ_WORLD_NAME}/model/${GZ_MODEL_NAME}/link/base_link/sensor/imu_sensor/imu}"
 
 # ROS topics expected by VINS-Fusion

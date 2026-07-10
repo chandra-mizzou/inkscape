@@ -106,26 +106,22 @@ export QGC_APPIMAGE=$HOME/QGroundControl.AppImage
 
 Optional: put those lines in `~/.bashrc`. Paths can be overridden in `config/env.sh`.
 
-### 3. Launch the multi-terminal simulation
+### 3. Launch (one window, sub-panes)
 
 ```bash
-./scripts/run_vins_fusion_sim.sh
+./scripts/run_vins_fusion_sim.sh          # default: ONE tmux window, tiled panes
+./scripts/run_vins_fusion_sim.sh --tabs   # ONE gnome-terminal window with tabs
+./scripts/run_vins_fusion_sim.sh --windows  # legacy: separate tmux windows
 ```
 
-If you are inside a **Snap VS Code / Cursor terminal** and see
-`__libc_pthread_init` / `GLIBC_PRIVATE`, either:
+Pane controls: `Ctrl-b` + arrows to move, `Ctrl-b z` to zoom a pane, `Ctrl-b d` to detach.
 
-```bash
-unset GTK_PATH GIO_MODULE_DIR
-./scripts/run_vins_fusion_sim.sh
-```
+If `/cam0/image_raw` shows **no data**:
+1. Unpause Gazebo (play button)
+2. Confirm: `gz topic -e -t /world/default/model/x500_mono_cam_0/link/camera_link/sensor/camera/image -n 1`
+3. Restart with `GZ_IP=127.0.0.1` (launcher sets this by default)
 
-or skip gnome-terminal entirely:
-
-```bash
-./scripts/run_vins_fusion_sim.sh --tmux
-# then:  tmux attach -t vins-fusion-vio
-```
+QGC `Failed to fetch tile / Network not available` is **harmless offline** (map tiles only).
 
 Useful flags:
 
