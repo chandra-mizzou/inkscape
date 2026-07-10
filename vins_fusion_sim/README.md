@@ -106,22 +106,29 @@ export QGC_APPIMAGE=$HOME/QGroundControl.AppImage
 
 Optional: put those lines in `~/.bashrc`. Paths can be overridden in `config/env.sh`.
 
-### 3. Launch (one window, sub-panes)
+### 3. Launch (ONE window, multiple TABS — not tiled)
 
 ```bash
-./scripts/run_vins_fusion_sim.sh          # default: ONE tmux window, tiled panes
-./scripts/run_vins_fusion_sim.sh --tabs   # ONE gnome-terminal window with tabs
-./scripts/run_vins_fusion_sim.sh --windows  # legacy: separate tmux windows
+./scripts/run_vins_fusion_sim.sh          # default: gnome-terminal tabs in one window
+./scripts/run_vins_fusion_sim.sh --tmux   # fallback: tmux windows (Ctrl-b n / p)
 ```
 
-Pane controls: `Ctrl-b` + arrows to move, `Ctrl-b z` to zoom a pane, `Ctrl-b d` to detach.
+If Gazebo does not open, open the **T1-PX4-Gazebo** tab and check the log. Common fixes:
+```bash
+export DISPLAY=:0
+unset HEADLESS
+# kill stale sims
+./scripts/stop_sim.sh
+# manual GUI test
+gz sim -v 4 empty.sdf
+# then PX4
+cd ~/PX4-Autopilot && make px4_sitl gz_x500_mono_cam
+```
 
-If `/cam0/image_raw` shows **no data**:
-1. Unpause Gazebo (play button)
-2. Confirm: `gz topic -e -t /world/default/model/x500_mono_cam_0/link/camera_link/sensor/camera/image -n 1`
-3. Restart with `GZ_IP=127.0.0.1` (launcher sets this by default)
+If `/cam0/image_raw` shows **no data**: unpause Gazebo, then
+`gz topic -e -t /world/default/model/x500_mono_cam_0/link/camera_link/sensor/camera/image -n 1`
 
-QGC `Failed to fetch tile / Network not available` is **harmless offline** (map tiles only).
+QGC `Failed to fetch tile / Network not available` is **harmless offline**.
 
 Useful flags:
 
@@ -226,6 +233,7 @@ In QGroundControl:
 | `dlopen(): error loading libfuse.so.2` | AppImage needs FUSE | `sudo apt install libfuse2` **or** `~/QGroundControl-v4.4.3.AppImage --appimage-extract-and-run` |
 | QGC `Failed to fetch tile / Network not available` | Offline / no map CDN | Ignore — does not affect SITL control |
 | Bridge up but `/cam0/image_raw: no data` | Gazebo paused, or GZ transport IP | Unpause Gazebo; `export GZ_IP=127.0.0.1`; verify `gz topic -e -t <image> -n 1` |
+| Gazebo not launching / no GUI | `DISPLAY` unset, `HEADLESS=1`, Snap GTK, or stale gz/px4 | `export DISPLAY=:0; unset HEADLESS; ./scripts/stop_sim.sh`; check T1 tab; `gz sim empty.sdf` |
 | `loop_fusion / vins package not found` | Optional package not built | Safe to ignore for VIO; or `colcon build` loop_fusion |
 | No Gazebo window | DISPLAY / GPU / first PX4 build | Run T1 alone; finish `make px4_sitl gz_x500_mono_cam` |
 | QGC no vehicle | SITL not up / firewall | Wait for T1; confirm UDP 14550 |

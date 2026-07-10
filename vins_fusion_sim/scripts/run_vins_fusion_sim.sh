@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# VINS-Fusion VIO launcher — ONE terminal window with sub-panes / tabs
+# VINS-Fusion VIO launcher — ONE terminal window with TABS (not tiled panes)
 # =============================================================================
-# Default: tmux session with a tiled pane grid (all modules visible together).
-# Optional: gnome-terminal tabs in a single window.
+# Default: gnome-terminal (or mate/xfce/konsole) tabs in a single window.
+# Fallback: tmux windows (switch with Ctrl-b n / p) — never tiled panes.
 #
 # Usage:
-#   ./scripts/run_vins_fusion_sim.sh              # tmux panes (default)
-#   ./scripts/run_vins_fusion_sim.sh --tabs       # gnome-terminal tabs
-#   ./scripts/run_vins_fusion_sim.sh --windows    # old: one tmux window each
+#   ./scripts/run_vins_fusion_sim.sh              # tabs in one window
+#   ./scripts/run_vins_fusion_sim.sh --tmux       # tmux windows (not panes)
 #   ./scripts/run_vins_fusion_sim.sh --dry-run
 #   ./scripts/run_vins_fusion_sim.sh --no-qgc
 #   ./scripts/run_vins_fusion_sim.sh --no-rviz
@@ -20,27 +19,32 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../config/env.sh"
 
-# Prefer localhost Gazebo transport (fixes disc-zmq / empty bridge topics)
 export GZ_IP="${GZ_IP:-127.0.0.1}"
+# Never start Gazebo headless unless the user explicitly asks
+unset HEADLESS || true
+export HEADLESS="${HEADLESS:-}"
 
 DRY_RUN=0
 SKIP_QGC=0
 SKIP_RVIZ=0
 SKIP_LOOP=0
-LAYOUT="${LAYOUT:-panes}"   # panes | tabs | windows | sequential
+LAYOUT="${LAYOUT:-tabs}"   # tabs | tmux | sequential
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
-    --tmux|--panes) LAYOUT=panes ;;
     --tabs) LAYOUT=tabs ;;
-    --windows) LAYOUT=windows ;;
+    --tmux|--windows) LAYOUT=tmux ;;
+    --panes)
+      echo "[WARN] --panes disabled by request; using tabs instead."
+      LAYOUT=tabs
+      ;;
     --sequential) LAYOUT=sequential ;;
     --no-qgc) SKIP_QGC=1 ;;
     --no-rviz) SKIP_RVIZ=1 ;;
     --no-loop) SKIP_LOOP=1 ;;
     -h|--help)
-      sed -n '2,20p' "$0"
+      sed -n '2,18p' "$0"
       exit 0
       ;;
     *)
@@ -69,6 +73,17 @@ sanitize_snap_env() {
 
 sanitize_snap_env
 
+# Ensure a display for Gazebo / QGC / RViz
+if [[ -z "${DISPLAY:-}" ]]; then
+  if [[ -S /tmp/.X11-unix/X0 ]]; then
+    export DISPLAY=:0
+    echo "[info] DISPLAY was unset — using DISPLAY=:0"
+  else
+    echo "[WARN] DISPLAY is unset and no X0 socket found. Gazebo GUI will not open."
+    echo "       Run this from a desktop terminal, or: export DISPLAY=:0"
+  fi
+fi
+
 SESSION_NAME="vins-fusion-vio"
 LOG_DIR="${VINS_SIM_DIR}/logs"
 mkdir -p "${LOG_DIR}"
@@ -81,9 +96,6 @@ add_term() {
   CMDS+=("$2")
 }
 
-# ---------------------------------------------------------------------------
-# Module list
-# ---------------------------------------------------------------------------
 add_term "T1-PX4-Gazebo" "bash '${SCRIPT_DIR}/01_px4_sitl.sh'"
 if [[ "${SKIP_QGC}" -eq 0 ]]; then
   add_term "T2-QGC" "bash '${SCRIPT_DIR}/02_qgroundcontrol.sh'"
@@ -100,24 +112,22 @@ if [[ "${SKIP_RVIZ}" -eq 0 ]]; then
   add_term "T9-RViz" "bash '${SCRIPT_DIR}/09_rviz.sh'"
 fi
 
-pane_cmd() {
-  # Keep pane open after exit; export GZ_IP into the child shell
-  printf "export GZ_IP=%q; bash -lc %q; echo; echo '[%s] exited — Ctrl-b d to detach'; bash" \
-    "${GZ_IP}" \
-    "${1}; echo; echo '[exited]'; bash" \
-    "${2}"
+wrap_cmd() {
+  # Shared env for every tab
+  printf 'export GZ_IP=%q; unset HEADLESS; export DISPLAY=%q; %s; echo; echo "[%s] exited — press Enter"; read -r' \
+    "${GZ_IP}" "${DISPLAY:-:0}" "$1" "$2"
 }
 
 print_plan() {
   echo "============================================================"
-  echo " VINS-Fusion VIO — single-window subterminal launch"
+  echo " VINS-Fusion VIO — ONE window, multiple TABS"
   echo "============================================================"
-  echo " Layout      : ${LAYOUT}   (panes=tmux grid, tabs=gnome tabs)"
+  echo " Layout      : ${LAYOUT}"
+  echo " DISPLAY     : ${DISPLAY:-<unset>}"
   echo " GZ_IP       : ${GZ_IP}"
   echo " PX4_DIR     : ${PX4_DIR}"
   echo " ROS2_WS     : ${ROS2_WS}"
-  echo " Model       : ${PX4_SIM_MODEL} (${GZ_MODEL_NAME})"
-  echo " VINS config : ${VINS_CONFIG}"
+  echo " Model       : ${PX4_SIM_MODEL}"
   echo "------------------------------------------------------------"
   local i
   for i in "${!TITLES[@]}"; do
@@ -127,93 +137,96 @@ print_plan() {
 }
 
 # ---------------------------------------------------------------------------
-# tmux: ONE window, tiled panes (default)
+# gnome-terminal / mate-terminal / xfce4-terminal: ONE window, many tabs
 # ---------------------------------------------------------------------------
-launch_tmux_panes() {
+launch_gui_tabs() {
+  sanitize_snap_env
+  local i inner
+  local -a args=()
+
+  if command -v gnome-terminal >/dev/null 2>&1 && gnome-terminal --version >/dev/null 2>&1; then
+    # First --tab creates the single window; more --tab add tabs (no tiling).
+    for i in "${!TITLES[@]}"; do
+      inner="$(wrap_cmd "${CMDS[$i]}" "${TITLES[$i]}")"
+      args+=(--tab --title="${TITLES[$i]}" -- bash -lc "${inner}")
+    done
+    echo "[launch] gnome-terminal — ${#TITLES[@]} tabs in ONE window"
+    env -u GTK_PATH -u GIO_MODULE_DIR -u GDK_PIXBUF_MODULE_FILE \
+      gnome-terminal "${args[@]}"
+    return 0
+  fi
+
+  if command -v mate-terminal >/dev/null 2>&1; then
+    for i in "${!TITLES[@]}"; do
+      inner="$(wrap_cmd "${CMDS[$i]}" "${TITLES[$i]}")"
+      args+=(--tab --title="${TITLES[$i]}" -- bash -lc "${inner}")
+    done
+    echo "[launch] mate-terminal — ${#TITLES[@]} tabs in ONE window"
+    mate-terminal "${args[@]}"
+    return 0
+  fi
+
+  if command -v xfce4-terminal >/dev/null 2>&1; then
+    # xfce4-terminal: first tab opens window; --tab adds more
+    inner0="$(wrap_cmd "${CMDS[0]}" "${TITLES[0]}")"
+    args=(--hold --title="${TITLES[0]}" -e "bash -lc $(printf '%q' "${inner0}")")
+    for ((i = 1; i < ${#TITLES[@]}; i++)); do
+      inner="$(wrap_cmd "${CMDS[$i]}" "${TITLES[$i]}")"
+      args+=(--tab --title="${TITLES[$i]}" -e "bash -lc $(printf '%q' "${inner}")")
+    done
+    echo "[launch] xfce4-terminal — ${#TITLES[@]} tabs in ONE window"
+    xfce4-terminal "${args[@]}"
+    return 0
+  fi
+
+  if command -v konsole >/dev/null 2>&1; then
+    # Konsole: new-tab via -e is awkward; open first then tabs via qdbus is fragile.
+    # Use --tabs-from-file instead.
+    local tabs_file
+    tabs_file="$(mktemp /tmp/vins_konsole_tabs_XXXX.tabs)"
+    for i in "${!TITLES[@]}"; do
+      inner="$(wrap_cmd "${CMDS[$i]}" "${TITLES[$i]}")"
+      {
+        echo "title: ${TITLES[$i]} ;; working-directory: ${PWD} ;; command: bash -lc $(printf '%q' "${inner}")"
+      } >> "${tabs_file}"
+    done
+    echo "[launch] konsole — tabs from ${tabs_file}"
+    konsole --tabs-from-file "${tabs_file}" &
+    return 0
+  fi
+
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# tmux: separate WINDOWS (tab-like), never tiled panes
+# ---------------------------------------------------------------------------
+launch_tmux_windows() {
   if ! command -v tmux >/dev/null 2>&1; then
     echo "tmux not found. Install: sudo apt install tmux" >&2
     exit 1
   fi
   tmux has-session -t "=${SESSION_NAME}" 2>/dev/null && tmux kill-session -t "${SESSION_NAME}"
 
-  local first_cmd
-  first_cmd="export GZ_IP=${GZ_IP}; ${CMDS[0]}; echo; echo '[${TITLES[0]}] exited'; bash"
-  tmux new-session -d -s "${SESSION_NAME}" -n "vio" \
-    "bash -lc $(printf '%q' "${first_cmd}")"
+  local cmd0
+  cmd0="export GZ_IP=${GZ_IP}; unset HEADLESS; export DISPLAY=${DISPLAY:-:0}; ${CMDS[0]}; echo; echo '[${TITLES[0]}] exited'; bash"
+  tmux new-session -d -s "${SESSION_NAME}" -n "${TITLES[0]}" "bash -lc $(printf '%q' "${cmd0}")"
 
   local i
   for ((i = 1; i < ${#TITLES[@]}; i++)); do
     local cmd
-    cmd="export GZ_IP=${GZ_IP}; ${CMDS[$i]}; echo; echo '[${TITLES[$i]}] exited'; bash"
-    # Alternate split direction for a usable grid
-    if (( i % 2 == 1 )); then
-      tmux split-window -t "${SESSION_NAME}:vio" -h "bash -lc $(printf '%q' "${cmd}")"
-    else
-      tmux split-window -t "${SESSION_NAME}:vio" -v "bash -lc $(printf '%q' "${cmd}")"
-    fi
-    tmux select-layout -t "${SESSION_NAME}:vio" tiled >/dev/null
-    sleep 0.25
-  done
-
-  tmux select-layout -t "${SESSION_NAME}:vio" tiled
-  # Label panes with titles (tmux 2.6+)
-  for i in "${!TITLES[@]}"; do
-    tmux select-pane -t "${SESSION_NAME}:vio.${i}" -T "${TITLES[$i]}" 2>/dev/null || true
-  done
-  tmux set-option -t "${SESSION_NAME}" pane-border-status top 2>/dev/null || true
-  tmux set-option -t "${SESSION_NAME}" pane-border-format " #{pane_index}:#{pane_title} " 2>/dev/null || true
-  tmux select-pane -t "${SESSION_NAME}:vio.0"
-
-  echo ""
-  echo "tmux session '${SESSION_NAME}' — ONE window with ${#TITLES[@]} panes."
-  echo "  Attach     : tmux attach -t ${SESSION_NAME}"
-  echo "  Move focus : Ctrl-b then arrow keys"
-  echo "  Zoom pane  : Ctrl-b then z"
-  echo "  Detach     : Ctrl-b then d"
-  echo "  Kill       : tmux kill-session -t ${SESSION_NAME}"
-  echo "  Status     : ${SCRIPT_DIR}/check_status.sh"
-  if [[ -t 0 ]]; then
-    tmux attach -t "${SESSION_NAME}"
-  fi
-}
-
-# ---------------------------------------------------------------------------
-# tmux: separate windows (legacy)
-# ---------------------------------------------------------------------------
-launch_tmux_windows() {
-  tmux has-session -t "=${SESSION_NAME}" 2>/dev/null && tmux kill-session -t "${SESSION_NAME}"
-  local cmd0="export GZ_IP=${GZ_IP}; ${CMDS[0]}; echo; echo '[${TITLES[0]}] exited'; bash"
-  tmux new-session -d -s "${SESSION_NAME}" -n "${TITLES[0]}" "bash -lc $(printf '%q' "${cmd0}")"
-  local i
-  for ((i = 1; i < ${#TITLES[@]}; i++)); do
-    local cmd="export GZ_IP=${GZ_IP}; ${CMDS[$i]}; echo; echo '[${TITLES[$i]}] exited'; bash"
+    cmd="export GZ_IP=${GZ_IP}; unset HEADLESS; export DISPLAY=${DISPLAY:-:0}; ${CMDS[$i]}; echo; echo '[${TITLES[$i]}] exited'; bash"
     tmux new-window -t "${SESSION_NAME}" -n "${TITLES[$i]}" "bash -lc $(printf '%q' "${cmd}")"
     sleep 0.2
   done
   tmux select-window -t "${SESSION_NAME}:0"
-  echo "tmux windows mode — switch with Ctrl-b n / p"
-  [[ -t 0 ]] && tmux attach -t "${SESSION_NAME}"
-}
 
-# ---------------------------------------------------------------------------
-# gnome-terminal: ONE window, many tabs
-# ---------------------------------------------------------------------------
-launch_gnome_tabs() {
-  sanitize_snap_env
-  if ! command -v gnome-terminal >/dev/null 2>&1; then
-    echo "[WARN] gnome-terminal missing — falling back to tmux panes"
-    launch_tmux_panes
-    return
-  fi
-  local args=(--window)
-  local i
-  for i in "${!TITLES[@]}"; do
-    local inner="export GZ_IP=${GZ_IP}; ${CMDS[$i]}; echo; echo '[${TITLES[$i]}] exited — press Enter'; read -r"
-    args+=(--tab --title="${TITLES[$i]}" -- bash -lc "${inner}")
-  done
-  env -u GTK_PATH -u GIO_MODULE_DIR -u GDK_PIXBUF_MODULE_FILE \
-    gnome-terminal "${args[@]}"
-  echo "Opened ONE gnome-terminal window with ${#TITLES[@]} tabs."
+  echo ""
+  echo "tmux session '${SESSION_NAME}' — ${#TITLES[@]} WINDOWS (not tiled)."
+  echo "  Attach : tmux attach -t ${SESSION_NAME}"
+  echo "  Next   : Ctrl-b n     Prev: Ctrl-b p     List: Ctrl-b w"
+  echo "  Detach : Ctrl-b d"
+  [[ -t 0 ]] && tmux attach -t "${SESSION_NAME}"
 }
 
 launch_sequential() {
@@ -221,22 +234,26 @@ launch_sequential() {
   local i
   for i in "${!TITLES[@]}"; do
     local logfile="${LOG_DIR}/${TITLES[$i]}.log"
-    bash -lc "export GZ_IP=${GZ_IP}; ${CMDS[$i]}" >"${logfile}" 2>&1 &
+    bash -lc "export GZ_IP=${GZ_IP}; unset HEADLESS; export DISPLAY=${DISPLAY:-:0}; ${CMDS[$i]}" >"${logfile}" 2>&1 &
     echo "  started ${TITLES[$i]} (pid=$!) -> ${logfile}"
     sleep 1
   done
 }
 
 preflight() {
-  local warn=0
-  [[ -d "${PX4_DIR}" ]] || { echo "[WARN] PX4_DIR missing: ${PX4_DIR}"; warn=1; }
-  [[ -f "/opt/ros/${ROS_DISTRO}/setup.bash" ]] || { echo "[WARN] ROS 2 missing"; warn=1; }
-  [[ -f "${VINS_CONFIG}" ]] || { echo "[WARN] VINS config missing"; warn=1; }
-  if [[ "${warn}" -eq 1 ]]; then
-    echo "Some prerequisites missing — panes will show the real errors."
+  echo "[preflight] DISPLAY=${DISPLAY:-<unset>}  GZ_IP=${GZ_IP}  HEADLESS=${HEADLESS:-<unset>}"
+  if ! command -v gz >/dev/null 2>&1; then
+    echo "[WARN] 'gz' CLI not in PATH — Gazebo Harmonic may not be installed."
+  else
+    echo "[preflight] gz: $(gz sim --versions 2>/dev/null | head -n1 || gz --version 2>/dev/null | head -n1 || echo present)"
   fi
-  echo "[note] QGC 'Failed to fetch tile / Network not available' is normal offline — ignore."
-  echo "[note] If /cam0 has no data: ensure Gazebo is unpaused and GZ_IP=${GZ_IP}."
+  if [[ ! -d "${PX4_DIR}" ]]; then
+    echo "[WARN] PX4_DIR missing: ${PX4_DIR}"
+  fi
+  # Kill stale sims that block a new Gazebo GUI
+  if pgrep -af 'gz sim|bin/px4' >/dev/null 2>&1; then
+    echo "[preflight] Stale px4/gz processes detected. Consider: ${SCRIPT_DIR}/stop_sim.sh"
+  fi
 }
 
 print_plan
@@ -248,16 +265,19 @@ if [[ "${DRY_RUN}" -eq 1 ]]; then
 fi
 
 case "${LAYOUT}" in
-  panes) launch_tmux_panes ;;
-  windows) launch_tmux_windows ;;
-  tabs) launch_gnome_tabs ;;
+  tabs)
+    if ! launch_gui_tabs; then
+      echo "[WARN] No tab-capable GUI terminal found — falling back to tmux windows."
+      launch_tmux_windows
+    fi
+    ;;
+  tmux) launch_tmux_windows ;;
   sequential) launch_sequential ;;
   *) echo "Unknown LAYOUT=${LAYOUT}" >&2; exit 1 ;;
 esac
 
 echo ""
 echo "Next:"
-echo "  1. In Gazebo: confirm sim is running (not paused)."
-echo "  2. Check T4/T5 panes: ros2 topic hz /cam0/image_raw should show a rate."
-echo "  3. QGC: Arm → Takeoff → slow figure-8 (map tile errors are OK offline)."
-echo "  4. ${SCRIPT_DIR}/check_status.sh"
+echo "  • Switch tabs in the single terminal window to see T1 (Gazebo) logs."
+echo "  • If Gazebo GUI missing: read T1 tab errors; try: export DISPLAY=:0"
+echo "  • ${SCRIPT_DIR}/check_status.sh"
