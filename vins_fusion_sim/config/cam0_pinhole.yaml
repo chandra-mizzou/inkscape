@@ -1,0 +1,20 @@
+%YAML:1.0
+---
+model_type: PINHOLE
+camera_name: gazebo_mono_cam
+image_width: 640
+image_height: 480
+
+# Approximate pinhole model for PX4 Gazebo default mono camera (~90° HFOV).
+# fx = fy ≈ width / (2 * tan(hfov/2)) with hfov≈1.57 rad → ~320
+# Prefer replacing these with values from /cam0/camera_info after bridging.
+distortion_parameters:
+   k1: 0.0
+   k2: 0.0
+   p1: 0.0
+   p2: 0.0
+projection_parameters:
+   fx: 320.0
+   fy: 320.0
+   cx: 320.0
+   cy: 240.0

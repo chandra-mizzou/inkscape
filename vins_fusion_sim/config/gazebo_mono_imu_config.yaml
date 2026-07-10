@@ -1,0 +1,80 @@
+%YAML:1.0
+
+# =============================================================================
+# VINS-Fusion config for PX4 Gazebo SITL mono camera + IMU (x500_mono_cam)
+# =============================================================================
+# Topics are remapped by ros_gz_bridge / topic_remapper to EuRoC-style names.
+# Camera intrinsics approximate the default Gazebo mono camera (640x480, ~90°).
+# For best results, calibrate from your Gazebo camera_info topic and update
+# cam0_pinhole.yaml + body_T_cam0 below.
+# =============================================================================
+
+#common parameters
+#support: 1 imu 1 cam; 1 imu 2 cam; 2 cam
+imu: 1
+num_of_cam: 1
+
+imu_topic: "/imu0"
+image0_topic: "/cam0/image_raw"
+image1_topic: "/cam1/image_raw"
+output_path: "/tmp/vins_output/"
+
+cam0_calib: "cam0_pinhole.yaml"
+cam1_calib: "cam0_pinhole.yaml"
+image_width: 640
+image_height: 480
+
+# GPU acceleration (keep 0 unless you built OpenCV+CUDA and enabled GPU_MODE)
+use_gpu: 0
+use_gpu_acc_flow: 0
+use_gpu_ceres: 0
+
+# Extrinsic parameter between IMU and Camera.
+# Gazebo x500_mono_cam: camera is on a forward-facing mount relative to body/IMU.
+# Convention: body/IMU = FLU (x forward, y left, z up); camera optical = RDF.
+# estimate_extrinsic:
+#   0 = trust matrix below
+#   1 = refine around initial guess
+#   2 = calibrate from scratch (needs enough excitation)
+estimate_extrinsic: 1
+
+body_T_cam0: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: d
+   data: [ 0.0,  0.0,  1.0,  0.10,
+          -1.0,  0.0,  0.0,  0.00,
+           0.0, -1.0,  0.0,  0.05,
+           0.0,  0.0,  0.0,  1.00]
+
+#Multiple thread support
+multiple_thread: 1
+
+#feature tracker parameters
+max_cnt: 150
+min_dist: 25
+freq: 10
+F_threshold: 1.0
+show_track: 1
+flow_back: 1
+
+#optimization parameters
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+#imu parameters (Gazebo / PX4 IMU — slightly noisier than EuRoC real IMU)
+acc_n: 0.2
+gyr_n: 0.05
+acc_w: 0.002
+gyr_w: 0.0004
+g_norm: 9.80665
+
+#unsynchronization parameters
+estimate_td: 1
+td: 0.0
+
+#loop closure parameters
+load_previous_pose_graph: 0
+pose_graph_save_path: "/tmp/vins_output/pose_graph/"
+save_image: 1

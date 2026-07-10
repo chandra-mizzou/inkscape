@@ -1,0 +1,23 @@
+# PX4 parameters for fusing VINS visual odometry into EKF2.
+# Load in QGroundControl: Vehicle Setup → Parameters → Tools → Load from file
+# Or apply via PX4 nsh:  param set <NAME> <VALUE>
+#
+# After loading: reboot the SITL vehicle (QGC or `reboot` in PX4 shell).
+
+# Enable vision position + yaw fusion (bitmask; PX4 v1.14+)
+# bit0: horizontal position, bit1: vertical position, bit2: yaw, bit3: velocity
+EKF2_EV_CTRL       11
+
+# Vision observation delay (ms) — VINS is not instantaneous
+EKF2_EV_DELAY      50
+
+# Vision position / velocity noise (tune if EKF rejects vision)
+EKF2_EVP_NOISE     0.1
+EKF2_EVV_NOISE     0.1
+
+# Prefer vision over GPS for position when both available (optional GPS-denied)
+# Set EKF2_GPS_CTRL to 0 for fully GPS-denied tests:
+# EKF2_GPS_CTRL    0
+
+# Require vision before arming in GPS-denied demos (optional)
+# COM_ARM_WO_GPS   1
